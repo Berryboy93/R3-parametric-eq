@@ -1,12 +1,16 @@
 /**
- * useAudioEngine — Web Audio API pink-noise source through a live BiquadFilter chain
- * Updates filter params in-place (no glitch reconnects) on every band/bypass change.
+ * useAudioEngine — Web Audio API source through a live BiquadFilter chain
+ * Supports three source modes:
+ *   • pink-noise   — built-in Voss-McCartney pink noise (default)
+ *   • microphone   — getUserMedia mic input (real-time analysis)
+ *   • file         — decoded audio file (looped playback)
  */
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { EQBand, FilterType } from '../dsp';
 
-// Map our FilterType enum → BiquadFilterType
+export type AudioSourceMode = 'pink-noise' | 'microphone' | 'file';
+
 function webAudioType(t: FilterType): BiquadFilterType {
   switch (t) {
     case FilterType.HighPass:  return 'highpass';
@@ -42,42 +46,49 @@ function buildPinkNoise(ctx: AudioContext): AudioBuffer {
 }
 
 export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
-  const [isPlaying, setIsPlaying]     = useState(false);
+  const [isPlaying,   setIsPlaying]   = useState(false);
+  const [sourceMode,  setSourceMode]  = useState<AudioSourceMode>('pink-noise');
   const [spectrumData, setSpectrum]   = useState<Float32Array | null>(null);
+  const [sourceError, setSourceError] = useState<string | null>(null);
+  const [fileReady,   setFileReady]   = useState(false);
+  const [fileName,    setFileName]    = useState<string | null>(null);
 
-  const ctxRef      = useRef<AudioContext  | null>(null);
-  const sourceRef   = useRef<AudioBufferSourceNode | null>(null);
-  const filtersRef  = useRef<BiquadFilterNode[]>([]);
-  const analyserRef = useRef<AnalyserNode  | null>(null);
-  const gainRef     = useRef<GainNode      | null>(null);
-  const rafRef      = useRef<number>(0);
-  const pinkRef     = useRef<AudioBuffer   | null>(null);
-  const playingRef  = useRef(false);
+  // Audio node refs
+  const ctxRef         = useRef<AudioContext | null>(null);
+  const bufSrcRef      = useRef<AudioBufferSourceNode | null>(null);
+  const streamRef      = useRef<MediaStream | null>(null);
+  const streamSrcRef   = useRef<MediaStreamAudioSourceNode | null>(null);
+  const filtersRef     = useRef<BiquadFilterNode[]>([]);
+  const analyserRef    = useRef<AnalyserNode | null>(null);
+  const gainRef        = useRef<GainNode | null>(null);
+  const rafRef         = useRef<number>(0);
+  const pinkRef        = useRef<AudioBuffer | null>(null);
+  const fileBufferRef  = useRef<AudioBuffer | null>(null);
+  const playingRef     = useRef(false);
+  // Ref copy of sourceMode to avoid stale closure in play()
+  const sourceModeRef  = useRef<AudioSourceMode>('pink-noise');
+  useEffect(() => { sourceModeRef.current = sourceMode; }, [sourceMode]);
 
-  // Sync live filter params (called both on first play and on every update)
+  // ── Filter sync ─────────────────────────────────────────────────────────────
   const syncFilters = useCallback((bs: readonly EQBand[], byp: boolean, now: number) => {
-    const filters = filtersRef.current;
-    bs.forEach((band, i) => {
-      if (i >= filters.length) return;
-      const f = filters[i];
-      if (byp || !band.enabled) {
-        f.type = 'allpass';
-        return;
-      }
+    filtersRef.current.forEach((f, i) => {
+      const band = bs[i];
+      if (!band) return;
+      if (byp || !band.enabled) { f.type = 'allpass'; return; }
       f.type = webAudioType(band.type);
       const freq = Math.max(20, Math.min(20000, band.frequency));
-      f.frequency.linearRampToValueAtTime(freq,      now + 0.015);
-      f.gain.linearRampToValueAtTime(band.gain,       now + 0.015);
+      f.frequency.linearRampToValueAtTime(freq,           now + 0.015);
+      f.gain.linearRampToValueAtTime(band.gain,            now + 0.015);
       f.Q.linearRampToValueAtTime(Math.max(0.001, band.q), now + 0.015);
     });
   }, []);
 
-  // Keep filters synced whenever bands or bypass changes
   useEffect(() => {
     if (!playingRef.current || !ctxRef.current) return;
     syncFilters(bands, bypass, ctxRef.current.currentTime);
   }, [bands, bypass, syncFilters]);
 
+  // ── RAF loop for spectrum data ───────────────────────────────────────────────
   const startRaf = useCallback(() => {
     const analyser = analyserRef.current;
     if (!analyser) return;
@@ -91,59 +102,137 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
-  const play = useCallback(async () => {
-    // Create AudioContext on first use (requires user gesture)
+  // ── Ensure AudioContext exists and is running ────────────────────────────────
+  const ensureCtx = useCallback(async () => {
     if (!ctxRef.current) ctxRef.current = new AudioContext();
     const ctx = ctxRef.current;
     if (ctx.state === 'suspended') await ctx.resume();
+    return ctx;
+  }, []);
 
-    // Pre-compute pink noise once
-    if (!pinkRef.current) pinkRef.current = buildPinkNoise(ctx);
+  // ── Load an audio file ───────────────────────────────────────────────────────
+  const loadFile = useCallback(async (file: File) => {
+    setSourceError(null);
+    try {
+      const ctx = await ensureCtx();
+      const arrayBuf   = await file.arrayBuffer();
+      const audioBuf   = await ctx.decodeAudioData(arrayBuf);
+      fileBufferRef.current = audioBuf;
+      setFileReady(true);
+      setFileName(file.name);
+    } catch {
+      setSourceError(`Could not decode "${file.name}" — try MP3, WAV, OGG, or FLAC`);
+      setFileReady(false);
+    }
+  }, [ensureCtx]);
+
+  // ── Play ─────────────────────────────────────────────────────────────────────
+  const play = useCallback(async () => {
+    setSourceError(null);
+    const ctx = await ensureCtx();
+    const mode = sourceModeRef.current;
 
     // Build filter chain
     filtersRef.current = bands.map(() => ctx.createBiquadFilter());
 
     // Analyser
-    const analyser       = ctx.createAnalyser();
-    analyser.fftSize     = 4096;
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 4096;
     analyser.smoothingTimeConstant = 0.75;
-    analyserRef.current  = analyser;
+    analyserRef.current = analyser;
 
-    // Output gain (avoid clipping)
+    // Output gain
     const gainNode = ctx.createGain();
-    gainNode.gain.value = 0.45;
+    gainNode.gain.value = mode === 'microphone' ? 0.85 : 0.45;
     gainRef.current = gainNode;
 
-    // Source
-    const source   = ctx.createBufferSource();
-    source.buffer  = pinkRef.current;
-    source.loop    = true;
-    sourceRef.current = source;
+    // Wire helper: sourceNode → filters → analyser → gain → destination
+    const wire = (sourceNode: AudioNode) => {
+      let node: AudioNode = sourceNode;
+      for (const f of filtersRef.current) { node.connect(f); node = f; }
+      node.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(ctx.destination);
+    };
 
-    // Wire: source → f0 → f1 → … → fn → analyser → gain → destination
-    let node: AudioNode = source;
-    for (const f of filtersRef.current) { node.connect(f); node = f; }
-    node.connect(analyser);
-    analyser.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    if (mode === 'microphone') {
+      // ── Microphone ──────────────────────────────────────────────────────────
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        streamRef.current = stream;
+        const src = ctx.createMediaStreamSource(stream);
+        streamSrcRef.current = src;
+        wire(src);
+        // Mic does not need .start() — it's live immediately
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : '';
+        setSourceError(
+          msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('permission')
+            ? 'Microphone access denied — allow mic access in your browser then try again'
+            : `Microphone error: ${msg || 'unknown error'}`
+        );
+        // Tear down partially-built chain
+        filtersRef.current.forEach(f => f.disconnect());
+        analyser.disconnect();
+        gainNode.disconnect();
+        filtersRef.current = [];
+        analyserRef.current = null;
+        return;
+      }
+    } else if (mode === 'file') {
+      // ── Audio file ──────────────────────────────────────────────────────────
+      if (!fileBufferRef.current) {
+        setSourceError('No file loaded — choose an audio file first');
+        filtersRef.current.forEach(f => f.disconnect());
+        analyser.disconnect();
+        gainNode.disconnect();
+        filtersRef.current = [];
+        analyserRef.current = null;
+        return;
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = fileBufferRef.current;
+      src.loop = true;
+      bufSrcRef.current = src;
+      wire(src);
+      src.start();
+    } else {
+      // ── Pink noise (default) ─────────────────────────────────────────────────
+      if (!pinkRef.current) pinkRef.current = buildPinkNoise(ctx);
+      const src = ctx.createBufferSource();
+      src.buffer = pinkRef.current;
+      src.loop = true;
+      bufSrcRef.current = src;
+      wire(src);
+      src.start();
+    }
 
     syncFilters(bands, bypass, ctx.currentTime);
-    source.start();
     playingRef.current = true;
     setIsPlaying(true);
     startRaf();
-  }, [bands, bypass, syncFilters, startRaf]);
+  }, [bands, bypass, syncFilters, startRaf, ensureCtx]);
 
+  // ── Stop ─────────────────────────────────────────────────────────────────────
   const stop = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
     playingRef.current = false;
-    try { sourceRef.current?.stop(); } catch {}
-    sourceRef.current?.disconnect();
+    // Stop buffer source (pink noise / file)
+    try { bufSrcRef.current?.stop(); } catch {}
+    bufSrcRef.current?.disconnect();
+    bufSrcRef.current = null;
+    // Stop mic stream
+    streamSrcRef.current?.disconnect();
+    streamSrcRef.current = null;
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    // Tear down rest of chain
     filtersRef.current.forEach(f => f.disconnect());
     analyserRef.current?.disconnect();
     gainRef.current?.disconnect();
     filtersRef.current  = [];
     analyserRef.current = null;
+    gainRef.current     = null;
     setIsPlaying(false);
     setSpectrum(null);
   }, []);
@@ -151,5 +240,10 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   // Cleanup on unmount
   useEffect(() => () => { stop(); ctxRef.current?.close(); }, [stop]);
 
-  return { isPlaying, play, stop, spectrumData };
+  return {
+    isPlaying, play, stop, spectrumData,
+    sourceMode, setSourceMode,
+    sourceError, setSourceError,
+    loadFile, fileReady, fileName,
+  };
 }

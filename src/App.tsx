@@ -3,13 +3,14 @@
  * Features: A/B comparison, Preset Browser, AI Panel, touch support
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FruityEQCanvas } from './components/FruityEQCanvas';
 import { BandStrip, BAND_COLORS } from './components/BandStrip';
 import { PresetBrowser } from './components/PresetBrowser';
 import { AIPanel } from './components/AIPanel';
 import { useEQState } from './hooks/useEQState';
 import { useAudioEngine } from './hooks/useAudioEngine';
+import type { AudioSourceMode } from './hooks/useAudioEngine';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { usePresetManager } from './hooks/usePresetManager';
 import { FilterType } from './dsp';
@@ -50,7 +51,19 @@ export function App() {
     return engine.getEQCurve(512);
   }, [state, engine]);
 
-  const { isPlaying, play, stop, spectrumData } = useAudioEngine(state.bands, state.bypass);
+  const {
+    isPlaying, play, stop, spectrumData,
+    sourceMode, setSourceMode, sourceError, setSourceError,
+    loadFile, fileReady, fileName,
+  } = useAudioEngine(state.bands, state.bypass);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSourceChange = (mode: AudioSourceMode) => {
+    if (isPlaying) stop();
+    setSourceMode(mode);
+    setSourceError(null);
+  };
 
   useKeyboardShortcuts({
     bands: state.bands, selectedBand, setSelectedBand,
@@ -143,9 +156,73 @@ export function App() {
 
         {/* Transport + controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+
+          {/* ── Source mode selector ──────────────────────────────────────── */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            style={{ display: 'none' }}
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) loadFile(file);
+              e.target.value = '';
+            }}
+          />
+          <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            {([
+              { mode: 'pink-noise' as AudioSourceMode, icon: '🎵', label: 'PINK' },
+              { mode: 'microphone' as AudioSourceMode, icon: '🎤', label: 'MIC'  },
+              { mode: 'file'       as AudioSourceMode, icon: '📁', label: 'FILE' },
+            ]).map(({ mode, icon, label }) => (
+              <button
+                key={mode}
+                onClick={() => {
+                  handleSourceChange(mode);
+                  if (mode === 'file') fileInputRef.current?.click();
+                }}
+                title={
+                  mode === 'pink-noise' ? 'Play built-in pink noise test tone'
+                  : mode === 'microphone' ? 'Use microphone input (requires permission)'
+                  : 'Play audio from a file'
+                }
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 3,
+                  padding: '4px 8px', borderRadius: 4, cursor: 'pointer',
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
+                  border: `1px solid ${sourceMode === mode ? '#B7FF0055' : '#1e1e2e'}`,
+                  background: sourceMode === mode ? 'rgba(183,255,0,0.09)' : 'transparent',
+                  color: sourceMode === mode ? '#B7FF00' : '#404055',
+                  transition: 'all 120ms',
+                }}
+              >
+                <span style={{ fontSize: 10 }}>{icon}</span>
+                {label}
+              </button>
+            ))}
+            {/* File name badge */}
+            {sourceMode === 'file' && fileReady && fileName && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                title={`Loaded: ${fileName} — click to change`}
+                style={{
+                  padding: '4px 8px', borderRadius: 4, cursor: 'pointer',
+                  fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
+                  border: '1px solid #252535', background: '#13131e', color: '#606080',
+                  maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}
+              >
+                {fileName.length > 14 ? `${fileName.slice(0, 12)}…` : fileName}
+              </button>
+            )}
+          </div>
+
+          <div style={{ width: 1, height: 18, background: '#1e1e2e' }} />
+
+          {/* PLAY / STOP */}
           <button
             onClick={isPlaying ? stop : play}
-            title={isPlaying ? 'Stop pink noise' : 'Play pink noise through EQ'}
+            title={isPlaying ? 'Stop' : `Play (${sourceMode})`}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '5px 14px', borderRadius: 5, cursor: 'pointer',
@@ -250,6 +327,23 @@ export function App() {
           </div>
         </div>
       </div>
+
+      {/* ── Source error banner ──────────────────────────────────────────── */}
+      {sourceError && (
+        <div style={{
+          flexShrink: 0, margin: '6px 16px 0',
+          padding: '7px 12px', borderRadius: 6,
+          background: 'rgba(239,68,68,0.08)', border: '1px solid #ef444440',
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ fontSize: 13 }}>⚠️</span>
+          <span style={{ fontSize: 11, color: '#ef8888', flex: 1 }}>{sourceError}</span>
+          <button
+            onClick={() => setSourceError(null)}
+            style={{ background: 'none', border: 'none', color: '#604040', cursor: 'pointer', fontSize: 14 }}
+          >✕</button>
+        </div>
+      )}
 
       {/* ── AI Panel ───────────────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0, paddingTop: 8 }}>
