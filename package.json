@@ -1,35 +1,23 @@
 {
-  "name": "@r3/parametric-eq",
+  "name": "r3-parametric-eq-demo",
   "version": "1.0.0",
-  "description": "R3 NATIVE Parametric EQ Engine - Production Audio Processing Module",
+  "description": "R3 NATIVE Parametric EQ Engine — Interactive Demo",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "type-check": "tsc --noEmit",
-    "test": "turbo run test",
-    "test:coverage": "turbo run test -- --coverage",
-    "clean": "turbo run clean && rm -rf node_modules dist"
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
   },
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
   "devDependencies": {
-    "@types/node": "^20.10.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
-    "@typescript-eslint/eslint-plugin": "^6.13.2",
-    "@typescript-eslint/parser": "^6.13.2",
-    "eslint": "^8.55.0",
-    "prettier": "^3.1.1",
+    "@vitejs/plugin-react": "^4.7.0",
     "typescript": "^5.3.3",
-    "vite": "^5.0.0",
-    "vitest": "^1.0.4",
-    "turbo": "^1.10.16"
+    "vite": "^5.4.21"
   }
 }
