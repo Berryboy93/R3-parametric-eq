@@ -21,13 +21,25 @@ export function gainToY(g: number, H: number): number {
 }
 
 function makeStaticSpectrum(bins: number): number[] {
-  let seed = 7;
+  // Seeded deterministic RNG so spectrum is stable across renders
+  let seed = 42;
   const rng = () => { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return (seed >>> 0) / 0xffffffff; };
-  return Array.from({ length: bins }, (_, i) => {
-    const t    = i / bins;
-    const freq = 20 * Math.pow(1000, t);
-    const pink = -12 * Math.log10(freq / 20) * 0.4;
-    return Math.max(-DB_RANGE - 4, Math.min(DB_RANGE - 4, pink + (rng() - 0.5) * 14 + 4 * Math.exp(-Math.pow((t - 0.35) / 0.07, 2))));
+
+  // Raw pass: pink noise shape with a musical energy bump around 80–400 Hz
+  const raw = Array.from({ length: bins }, (_, i) => {
+    const t    = i / bins;                            // 0..1 log-freq
+    const pink = -10 * t;                             // gentle -10 dB per decade
+    const bump = 5  * Math.exp(-Math.pow((t - 0.22) / 0.12, 2)); // warmth bump
+    const high = -4 * Math.pow(Math.max(0, t - 0.65), 1.5);      // soft HF rolloff
+    const noise = (rng() - 0.5) * 7;                 // ±3.5 dB random variation
+    return pink + bump + high + noise - 4;            // slight overall offset down
+  });
+
+  // 5-point moving-average smooth to remove jagginess
+  return raw.map((v, i) => {
+    const sum = raw.slice(Math.max(0, i - 2), i + 3).reduce((a, b) => a + b, 0);
+    const avg = sum / Math.min(5, i + 3) ;
+    return Math.max(-DB_RANGE + 1, Math.min(DB_RANGE - 2, avg));
   });
 }
 
@@ -94,10 +106,23 @@ export function R3EQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDra
     } else {
       const bW = W / staticSpec.length;
       for (let i = 0; i < staticSpec.length; i++) {
-        const n = (staticSpec[i] + DB_RANGE) / (DB_RANGE * 2);
-        const barH = Math.max(0, n * H);
-        ctx.fillStyle = `rgba(183,255,0,${0.04 + n * 0.10})`;
-        ctx.fillRect(i * bW, H - barH, Math.max(0.5, bW - 0.5), barH);
+        const n    = Math.max(0, (staticSpec[i] + DB_RANGE) / (DB_RANGE * 2));
+        const barH = Math.max(2, n * H);
+        const bx   = i * bW;
+        const by   = H - barH;
+        const bw   = Math.max(0.8, bW - 0.6);
+
+        // Body gradient: bright at top, fade to near-zero at bottom
+        const grad = ctx.createLinearGradient(0, by, 0, H);
+        grad.addColorStop(0,   `rgba(183,255,0,${0.22 + n * 0.18})`);
+        grad.addColorStop(0.5, `rgba(183,255,0,${0.08 + n * 0.08})`);
+        grad.addColorStop(1,   'rgba(183,255,0,0.02)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(bx, by, bw, barH);
+
+        // Bright cap line at the top of each bar
+        ctx.fillStyle = `rgba(183,255,0,${0.45 + n * 0.35})`;
+        ctx.fillRect(bx, by, bw, 1.2);
       }
     }
 
