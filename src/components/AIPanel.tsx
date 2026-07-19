@@ -1,7 +1,6 @@
 /**
  * AIPanel — AI-powered EQ recommendations
- * FR-AI-001 to FR-AI-008: mud, harshness, sibilance, boxiness detection
- * Shows confidence score + one-click apply per recommendation
+ * Smoky metallic aesthetic — amber/copper accents
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -14,10 +13,10 @@ const SAMPLE_RATE = 48000;
 const FFT_SIZE    = 4096;
 
 const ISSUE_META: Record<string, { label: string; icon: string; color: string }> = {
-  [FrequencyIssue.Mud]:       { label: 'Mud',       icon: '🟤', color: '#c8a46a' },
-  [FrequencyIssue.Harshness]: { label: 'Harshness', icon: '🔴', color: '#e05555' },
-  [FrequencyIssue.Sibilance]: { label: 'Sibilance', icon: '🟡', color: '#f0c040' },
-  [FrequencyIssue.Boominess]: { label: 'Boominess', icon: '🟠', color: '#e07040' },
+  [FrequencyIssue.Mud]:       { label: 'Mud',       icon: '🟤', color: '#C4862A' },
+  [FrequencyIssue.Harshness]: { label: 'Harshness', icon: '🔴', color: '#C45A3A' },
+  [FrequencyIssue.Sibilance]: { label: 'Sibilance', icon: '🟡', color: '#C9A840' },
+  [FrequencyIssue.Boominess]: { label: 'Boominess', icon: '🟠', color: '#C47B3A' },
 };
 
 interface Props {
@@ -33,24 +32,20 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
   const [applied, setApplied]         = useState<Set<string>>(new Set());
   const [lastAnalyzed, setLastAnalyzed] = useState<number>(0);
 
-  // Run analysis at most every 2 seconds while live spectrum is flowing
   useEffect(() => {
     if (!spectrumData || !isPlaying) return;
     const now = Date.now();
     if (now - lastAnalyzed < 2000) return;
-
     const result = analyzer.analyzeSpectrum(spectrumData, SAMPLE_RATE, FFT_SIZE);
     setRecs(result.recommendations);
     setLastAnalyzed(now);
   }, [spectrumData, isPlaying, lastAnalyzed]);
 
-  // Reset when stopped
   useEffect(() => {
     if (!isPlaying) { setRecs([]); setApplied(new Set()); }
   }, [isPlaying]);
 
   const handleApply = useCallback((rec: AIRecommendation) => {
-    // Find the best available peaking band (prefer disabled ones)
     const peaking = bands.filter(b => b.type === FilterType.Peaking);
     const target  = peaking.find(b => !b.enabled) ?? peaking[0];
     if (!target) return;
@@ -60,11 +55,12 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
 
   return (
     <div style={{
-      margin: '0 16px',
-      border: '1px solid #1c1c1c',
-      borderRadius: 6,
+      margin: '0 14px',
+      border: '1px solid #2c2825',
+      borderRadius: 5,
       overflow: 'hidden',
-      background: '#0a0a0a',
+      background: 'linear-gradient(180deg,#141210 0%,#0f0d0a 100%)',
+      boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.04)',
     }}>
       {/* Header */}
       <button
@@ -76,71 +72,76 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
         }}
         aria-expanded={open}
       >
-        <span style={{ fontSize: 14 }}>🤖</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#B7FF00', letterSpacing: '0.12em', fontFamily: 'Bebas Neue, Montserrat, sans-serif' }}>AI ANALYSIS</span>
+        <span style={{ fontSize: 13 }}>⚙️</span>
+        <span style={{
+          fontSize: 12, fontWeight: 800, color: '#C4862A',
+          letterSpacing: '0.14em', fontFamily: 'Bebas Neue, Montserrat, sans-serif',
+          textShadow: '0 0 8px rgba(196,134,42,0.35)',
+        }}>AI ANALYSIS</span>
         {isPlaying && recs.length === 0 && (
-          <span style={{ fontSize: 10, color: '#555', marginLeft: 4, fontStyle: 'italic' }}>listening…</span>
+          <span style={{ fontSize: 10, color: '#524c47', marginLeft: 4, fontStyle: 'italic' }}>listening…</span>
         )}
         {recs.length > 0 && (
           <span style={{
             marginLeft: 4, fontSize: 9, fontWeight: 700,
-            background: '#B7FF0030', color: '#B7FF00',
-            border: '1px solid #B7FF0060', borderRadius: 10,
+            background: 'rgba(196,134,42,0.12)', color: '#C4862A',
+            border: '1px solid rgba(196,134,42,0.35)', borderRadius: 3,
             padding: '1px 6px', letterSpacing: '0.04em',
           }}>{recs.length} ISSUE{recs.length !== 1 ? 'S' : ''}</span>
         )}
         {!isPlaying && (
-          <span style={{ fontSize: 10, color: '#333', marginLeft: 4 }}>— press PLAY to analyze</span>
+          <span style={{ fontSize: 10, color: '#3e3830', marginLeft: 4 }}>— press PLAY to analyze</span>
         )}
-        <span style={{ marginLeft: 'auto', color: '#444', fontSize: 12 }}>{open ? '▲' : '▼'}</span>
+        <span style={{ marginLeft: 'auto', color: '#524c47', fontSize: 11 }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {/* Body */}
       {open && (
-        <div style={{ borderTop: '1px solid #161616', padding: recs.length ? '10px 12px' : '6px 12px 10px' }}>
+        <div style={{ borderTop: '1px solid #252220', padding: recs.length ? '10px 12px' : '6px 12px 10px' }}>
           {recs.length === 0 ? (
-            <p style={{ fontSize: 11, color: '#333', fontStyle: 'italic' }}>
+            <p style={{ fontSize: 11, color: '#524c47', fontStyle: 'italic' }}>
               {isPlaying ? 'No significant issues detected — your mix sounds balanced.' : 'Start audio playback to detect frequency issues.'}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recs.map(rec => {
-                const meta = ISSUE_META[rec.issue] ?? { label: rec.issue, icon: '⚪', color: '#888' };
+                const meta = ISSUE_META[rec.issue] ?? { label: rec.issue, icon: '⚪', color: '#8A7A6A' };
                 const pct  = Math.round(rec.confidence * 100);
                 const done = applied.has(rec.issue);
                 return (
                   <div key={rec.issue} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '8px 10px',
-                    background: '#0f0f0f',
-                    border: `1px solid ${done ? '#242424' : meta.color + '30'}`,
+                    background: 'linear-gradient(180deg,#1c1a16 0%,#161410 100%)',
+                    border: `1px solid ${done ? '#3a3530' : meta.color + '35'}`,
                     borderRadius: 5,
                     opacity: done ? 0.5 : 1,
                     transition: 'opacity 200ms',
+                    boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.04)',
                   }}>
                     <span style={{ fontSize: 16, flexShrink: 0 }}>{meta.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: meta.color, letterSpacing: '0.05em' }}>{meta.label.toUpperCase()}</span>
-                        <span style={{ fontSize: 10, color: '#555' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: meta.color, letterSpacing: '0.05em' }}>
+                          {meta.label.toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: 10, color: '#6a6058' }}>
                           {rec.detectedFrequency >= 1000
                             ? `${(rec.detectedFrequency / 1000).toFixed(1)} kHz`
                             : `${Math.round(rec.detectedFrequency)} Hz`}
                         </span>
-                        <span style={{ fontSize: 10, color: '#555' }}>
+                        <span style={{ fontSize: 10, color: '#6a6058' }}>
                           {rec.suggestedGain >= 0 ? '+' : ''}{rec.suggestedGain.toFixed(1)} dB
                         </span>
                       </div>
-                      {/* Confidence bar */}
-                      <div style={{ height: 3, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: 3, background: '#2c2825', borderRadius: 2, overflow: 'hidden' }}>
                         <div style={{
                           height: '100%', width: `${pct}%`,
-                          background: meta.color,
-                          borderRadius: 2,
-                          transition: 'width 400ms',
+                          background: `linear-gradient(to right, ${meta.color}aa, ${meta.color})`,
+                          borderRadius: 2, transition: 'width 400ms',
                         }} />
                       </div>
-                      <span style={{ fontSize: 9, color: '#444', marginTop: 2, display: 'block' }}>
+                      <span style={{ fontSize: 9, color: '#524c47', marginTop: 2, display: 'block' }}>
                         {pct}% confidence · Q {rec.suggestedQ.toFixed(1)}
                       </span>
                     </div>
@@ -151,11 +152,14 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
                       style={{
                         padding: '5px 10px', borderRadius: 4,
                         fontSize: 10, fontWeight: 700, cursor: done ? 'default' : 'pointer',
-                        letterSpacing: '0.06em',
-                        background: done ? 'transparent' : '#B7FF0015',
-                        border: `1px solid ${done ? '#242424' : '#B7FF0060'}`,
-                        color: done ? '#333' : '#B7FF00',
-                        flexShrink: 0,
+                        letterSpacing: '0.06em', flexShrink: 0,
+                        background: done
+                          ? 'transparent'
+                          : 'linear-gradient(180deg,#3a3530 0%,#252220 100%)',
+                        border: `1px solid ${done ? '#3a3530' : meta.color + '55'}`,
+                        color: done ? '#524c47' : meta.color,
+                        boxShadow: done ? 'none'
+                          : 'inset 0 1px 0 rgba(255,235,200,0.07), 0 1px 3px rgba(0,0,0,0.5)',
                         transition: 'all 150ms',
                       }}
                     >{done ? '✓ APPLIED' : 'APPLY'}</button>

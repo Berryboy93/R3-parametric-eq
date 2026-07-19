@@ -1,5 +1,6 @@
 /**
  * BandStrip — horizontal row of 8 compact per-band control cards
+ * Smoky metallic aesthetic
  */
 
 import { useRef } from 'react';
@@ -7,14 +8,14 @@ import { FilterType } from '../dsp';
 import type { EQBand } from '../dsp';
 
 export const BAND_COLORS = [
-  '#c084fc', // 1 — purple
-  '#fb923c', // 2 — orange
-  '#4ade80', // 3 — green
-  '#22d3ee', // 4 — cyan
-  '#f472b6', // 5 — pink
-  '#facc15', // 6 — yellow
-  '#60a5fa', // 7 — blue
-  '#a78bfa', // 8 — violet
+  '#CF8A3A', // 1 — warm copper
+  '#7AAABB', // 2 — steel blue
+  '#76A876', // 3 — verdigris
+  '#C9A840', // 4 — aged brass
+  '#C96A55', // 5 — iron oxide
+  '#5B98C8', // 6 — gunmetal blue
+  '#9978C8', // 7 — tarnished pewter
+  '#B8924A', // 8 — aged bronze
 ];
 
 const TYPE_LABELS: Record<FilterType, string> = {
@@ -67,7 +68,7 @@ export function BandStrip({ bands, selectedBand, onSelectBand, onUpdate }: {
 }
 
 function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
-  const color = BAND_COLORS[band.id] ?? '#fff';
+  const color = BAND_COLORS[band.id] ?? '#C4862A';
   const hasGain = band.type !== FilterType.HighPass && band.type !== FilterType.LowPass;
 
   return (
@@ -75,13 +76,17 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
       onClick={onSelect}
       style={{
         flex: 1, minWidth: 0,
-        background: selected ? '#14141f' : '#0e0e18',
-        border: `1px solid ${selected ? color + 'aa' : '#1e1e2e'}`,
-        borderRadius: 8,
+        background: selected
+          ? `linear-gradient(180deg,#252018 0%,#1e1c16 100%)`
+          : `linear-gradient(180deg,#1c1a16 0%,#161410 100%)`,
+        border: `1px solid ${selected ? color + '70' : '#3a3530'}`,
+        borderRadius: 6,
         padding: '8px 8px 6px',
         cursor: 'pointer',
         display: 'flex', flexDirection: 'column', gap: 5,
-        boxShadow: selected ? `0 0 12px ${color}22` : 'none',
+        boxShadow: selected
+          ? `inset 0 1px 0 rgba(255,235,200,0.06), 0 0 10px ${color}18`
+          : 'inset 0 1px 0 rgba(255,235,200,0.04)',
         transition: 'all 150ms',
       }}
     >
@@ -89,10 +94,15 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
         <span style={{
           width: 18, height: 18, borderRadius: '50%',
-          background: band.enabled ? color : '#2a2a3a',
+          background: band.enabled
+            ? `radial-gradient(circle at 35% 35%,${color}cc,${color}66)`
+            : '#2c2825',
+          border: `1px solid ${band.enabled ? color + '80' : '#3a3530'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 9, fontWeight: 800, color: band.enabled ? '#000' : '#555',
-          flexShrink: 0, cursor: 'pointer', transition: 'background 150ms',
+          fontSize: 9, fontWeight: 800,
+          color: band.enabled ? '#0a0908' : '#524c47',
+          flexShrink: 0, cursor: 'pointer', transition: 'all 150ms',
+          boxShadow: band.enabled ? `0 0 4px ${color}40` : 'none',
         }}
           onClick={e => { e.stopPropagation(); onUpdate({ enabled: !band.enabled }); }}
           title={band.enabled ? 'Click to disable' : 'Click to enable'}
@@ -109,14 +119,13 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
           }}
         >
           {TYPE_OPTIONS.map(o => (
-            <option key={o.value} value={o.value} style={{ background: '#111118', color: '#d0d4e8' }}>
+            <option key={o.value} value={o.value} style={{ background: '#1e1b18', color: '#d8d0c4' }}>
               {o.label}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Frequency */}
       <SliderRow
         label="FREQ"
         value={band.frequency}
@@ -129,7 +138,6 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
         onClick={e => e.stopPropagation()}
       />
 
-      {/* Gain */}
       {hasGain && (
         <SliderRow
           label="GAIN"
@@ -143,7 +151,6 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
         />
       )}
 
-      {/* Q */}
       <SliderRow
         label="Q"
         value={band.q}
@@ -166,21 +173,20 @@ function SliderRow({ label, value, display, unit, min, max, step, color, logScal
   onChange: (v: number) => void;
   onClick?: (e: React.MouseEvent) => void;
 }) {
-  // Map value ↔ slider position (0–1000 integer range for smooth control)
-  const toSlider = (v: number) => {
-    if (logScale) return Math.round((Math.log(v / min) / Math.log(max / min)) * 1000);
-    return Math.round(((v - min) / (max - min)) * 1000);
-  };
-  const fromSlider = (s: number) => {
-    if (logScale) return min * Math.pow(max / min, s / 1000);
-    return min + (s / 1000) * (max - min);
-  };
+  const toSlider   = (v: number) => logScale
+    ? Math.round((Math.log(v / min) / Math.log(max / min)) * 1000)
+    : Math.round(((v - min) / (max - min)) * 1000);
+  const fromSlider = (s: number) => logScale
+    ? min * Math.pow(max / min, s / 1000)
+    : min + (s / 1000) * (max - min);
 
   return (
     <div onClick={onClick} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontSize: 7, color: '#555570', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 9, color: '#9090b0', fontFamily: 'monospace' }}>{display}<span style={{ fontSize: 7, color: '#555570', marginLeft: 1 }}>{unit}</span></span>
+        <span style={{ fontSize: 7, color: '#524c47', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 9, color: '#a09080', fontFamily: 'monospace' }}>
+          {display}<span style={{ fontSize: 7, color: '#524c47', marginLeft: 1 }}>{unit}</span>
+        </span>
       </div>
       <input
         type="range"

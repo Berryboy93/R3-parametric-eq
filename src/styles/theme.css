@@ -1,49 +1,63 @@
 /* ─────────────────────────────────────────────────────────────
-   R3 NATIVE — Official Brand Design System
-   Midnight Black + Neon Green
+   R3 NATIVE — Smoky Rustic Metallic Design System
+   Forge-fired charcoal · Aged copper · Ember amber
 ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* PRIMARY */
-  --r3-green:       #B7FF00;
-  --r3-black:       #080808;
-  --r3-silver:      #E6E6E6;
-  --r3-graphite:    #242424;
-  --r3-white:       #FFFFFF;
+  /* METAL BLACKS */
+  --metal-void:    #0a0908;
+  --metal-deep:    #131110;
+  --metal-base:    #1e1b18;
+  --metal-mid:     #2c2825;
+  --metal-high:    #3c3733;
+  --metal-sheen:   #524c47;
+  --metal-glint:   #6e6660;
 
-  /* DERIVED */
-  --bg-primary:     #080808;
-  --bg-secondary:   #0F1219;
-  --bg-tertiary:    #1A2535;
-  --accent-light:   #D4FF33;
-  --accent-dim:     #99CC00;
-  --border-subtle:  #1c1c1c;
-  --border-mid:     #242424;
-  --border-light:   #383838;
-  --text-primary:   #FFFFFF;
-  --text-secondary: #E6E6E6;
-  --text-muted:     #666666;
-  --text-dim:       #3a3a3a;
+  /* AMBER / COPPER ACCENT */
+  --amber:         #C4862A;
+  --amber-bright:  #E09A38;
+  --amber-ember:   #D4723A;
+  --amber-dim:     #8A5C1E;
+  --amber-ghost:   rgba(196,134,42,0.12);
+  --amber-border:  rgba(196,134,42,0.35);
+  --glow-amber:    0 0 14px rgba(196,134,42,0.40);
+  --glow-amber-sm: 0 0 6px  rgba(196,134,42,0.25);
 
-  /* STATES */
-  --state-hover:    rgba(183, 255, 0, 0.10);
-  --state-active:   rgba(183, 255, 0, 0.20);
-  --glow-neon:      0 0 16px rgba(183, 255, 0, 0.40);
-  --glow-bright:    0 0 24px rgba(183, 255, 0, 0.60);
-  --glow-soft:      0 0 8px  rgba(183, 255, 0, 0.25);
+  /* BRUSHED METAL BUTTON */
+  --btn-face:      linear-gradient(180deg,#3a3530 0%,#252220 55%,#2e2825 100%);
+  --btn-face-on:   linear-gradient(180deg,#1a1408 0%,#241c0a 45%,#1e1810 100%);
+  --btn-shadow:    inset 0 1px 0 rgba(255,235,200,0.07), inset 0 -1px 0 rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.6);
+  --btn-shadow-on: inset 0 2px 6px rgba(0,0,0,0.75), 0 0 8px rgba(196,134,42,0.22);
 
-  /* TYPOGRAPHY */
-  --font-display:   'Bebas Neue', 'Montserrat', sans-serif;
-  --font-body:      'Montserrat', system-ui, sans-serif;
+  /* WARM TEXT */
+  --text-warm:     #D8D0C4;
+  --text-silver:   #A09080;
+  --text-dim:      #6A6058;
+  --text-ghost:    #3E3830;
+
+  /* BORDERS */
+  --border-warm:   #3C3733;
+  --border-hi:     #524c47;
+
+  /* SEMANTIC ALIASES (kept for compat) */
+  --bg-primary:    var(--metal-void);
+  --bg-secondary:  var(--metal-deep);
+  --bg-tertiary:   var(--metal-base);
+  --r3-green:      var(--amber);
+  --r3-black:      var(--metal-void);
+  --r3-graphite:   var(--metal-high);
+  --border-light:  var(--border-hi);
+  --text-secondary:var(--text-silver);
+  --font-display:  'Bebas Neue', 'Montserrat', sans-serif;
+  --font-body:     'Montserrat', system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { scroll-behavior: smooth; }
 
 body, #root {
-  background: var(--bg-primary);
-  color: var(--text-secondary);
+  background: var(--metal-void);
+  color: var(--text-warm);
   font-family: var(--font-body);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
@@ -53,33 +67,33 @@ body, #root {
 
 /* ── Scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb { background: var(--r3-graphite); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+::-webkit-scrollbar-track  { background: var(--metal-void); }
+::-webkit-scrollbar-thumb  { background: var(--metal-high); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--metal-sheen); }
 
 /* ── Range inputs ──────────────────────────────────────── */
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-}
+input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 2px; background: var(--border-mid); border-radius: 1px;
+  height: 2px;
+  background: linear-gradient(to right, var(--metal-mid), var(--metal-high));
+  border-radius: 1px;
 }
 input[type="range"]::-moz-range-track {
-  height: 2px; background: var(--border-mid); border-radius: 1px;
+  height: 2px;
+  background: var(--metal-high);
+  border-radius: 1px;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px; height: 12px; border-radius: 50%;
-  background: var(--r3-green);
+  background: radial-gradient(circle at 35% 35%, var(--amber-bright), var(--amber));
   margin-top: -5px; cursor: pointer;
-  box-shadow: var(--glow-soft);
+  box-shadow: var(--glow-amber-sm), 0 1px 3px rgba(0,0,0,0.6);
 }
 input[type="range"]::-moz-range-thumb {
   width: 12px; height: 12px; border-radius: 50%;
-  background: var(--r3-green); border: none;
-  cursor: pointer; box-shadow: var(--glow-soft);
+  background: var(--amber); border: none;
+  cursor: pointer; box-shadow: var(--glow-amber-sm);
 }
 
 /* ── Button reset ──────────────────────────────────────── */
@@ -88,6 +102,6 @@ select { font-family: var(--font-body); outline: none; }
 
 /* ── Focus visible ─────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--r3-green);
+  outline: 2px solid var(--amber);
   outline-offset: 2px;
 }

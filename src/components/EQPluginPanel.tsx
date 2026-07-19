@@ -1,6 +1,6 @@
 /**
- * EQPluginPanel — the interactive EQ plugin with toolbar, canvas, vertical faders, AI
- * PRD §9.3: Plugin UI — dark panel · spectrum display · 8 band nodes · 8 vertical faders
+ * EQPluginPanel — EQ plugin with metallic smoky-rustic theme
+ * Toolbar · canvas · vertical faders · AI
  */
 
 import { useRef, useState, useCallback } from 'react';
@@ -34,7 +34,6 @@ export interface EQPluginPanelProps {
   onBandDrag: (id: number, freq: number, gain: number) => void;
   onBandUpdate: (id: number, u: Partial<EQBand>) => void;
   spectrumData: Float32Array | null;
-  // Audio transport
   isPlaying: boolean;
   onPlay: () => Promise<void>;
   onStop: () => void;
@@ -45,7 +44,6 @@ export interface EQPluginPanelProps {
   loadFile: (f: File) => Promise<void>;
   fileReady: boolean;
   fileName: string | null;
-  // EQ controls
   bypass: boolean;
   onToggleBypass: () => void;
   canUndo: boolean;
@@ -55,49 +53,61 @@ export interface EQPluginPanelProps {
   onReset: () => void;
   onOpenPresets: () => void;
   onShowHelp: () => void;
-  // A/B comparison
   activeSlot: 'A' | 'B';
   onCaptureSlot: (slot: 'A' | 'B') => void;
   onToggleAB: () => void;
-  // AI
   onAIApply: (bandId: number, freq: number, gain: number, q: number) => void;
-  // File seek
   fileDuration: number;
   fileCurrentTime: number;
   onSeek: (t: number) => void;
 }
 
 function fmtTime(s: number) {
-  const m = Math.floor(s / 60);
+  const m   = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
+// ── Shared metallic button helper ─────────────────────────────────────────────
+const metalBtn = (active: boolean, color = '#C4862A'): React.CSSProperties => ({
+  background: active
+    ? `linear-gradient(180deg,#1a1408 0%,#241c0a 45%,#1e1810 100%)`
+    : `linear-gradient(180deg,#3a3530 0%,#252220 55%,#2e2825 100%)`,
+  border: `1px solid ${active ? color + '70' : '#4a4440'}`,
+  borderTop: `1px solid ${active ? color + '50' : '#5a5450'}`,
+  borderBottom: `1px solid ${active ? color + '40' : '#1a1612'}`,
+  color: active ? color : '#706860',
+  boxShadow: active
+    ? `inset 0 2px 5px rgba(0,0,0,0.7), 0 0 7px ${color}22`
+    : 'inset 0 1px 0 rgba(255,235,200,0.07), inset 0 -1px 0 rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.55)',
+  transition: 'all 120ms',
+  cursor: 'pointer',
+});
+
 export function EQPluginPanel(props: EQPluginPanelProps) {
   const {
     state, curve, selectedBand, onSelectBand, onBandDrag, onBandUpdate, spectrumData,
-    isPlaying, onPlay, onStop, sourceMode, onSourceMode, sourceError, onClearError, loadFile, fileReady, fileName,
+    isPlaying, onPlay, onStop, sourceMode, onSourceMode, sourceError, onClearError,
+    loadFile, fileReady, fileName,
     bypass, onToggleBypass, canUndo, canRedo, onUndo, onRedo, onReset, onOpenPresets, onShowHelp,
     activeSlot, onCaptureSlot, onToggleAB, onAIApply,
     fileDuration, fileCurrentTime, onSeek,
   } = props;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    if (e.dataTransfer.types.includes('Files')) setIsDraggingOver(true);
+    if (e.dataTransfer.types.includes('Files')) setIsDragging(true);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    // Only clear when leaving the panel itself, not a child
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDraggingOver(false);
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false);
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingOver(false);
+    e.preventDefault(); setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (!file) return;
     if (!file.type.startsWith('audio/') && !/\.(mp3|wav|flac|ogg|aac|m4a|opus)$/i.test(file.name)) return;
@@ -112,32 +122,33 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
       onDrop={handleDrop}
       style={{
         position: 'relative',
-        background: '#0d0d18',
-        border: `1px solid ${isDraggingOver ? 'rgba(183,255,0,0.5)' : '#1a1a2e'}`,
-        borderTop: `2px solid ${isDraggingOver ? 'rgba(183,255,0,0.8)' : 'rgba(183,255,0,0.3)'}`,
-        borderRadius: '0 0 12px 12px',
-        boxShadow: '0 0 0 1px rgba(183,255,0,0.03), 0 32px 80px rgba(0,0,0,0.7)',
+        background: 'linear-gradient(180deg,#181510 0%,#111008 100%)',
+        border: `1px solid ${isDragging ? 'rgba(196,134,42,0.55)' : '#3a3530'}`,
+        borderTop: `2px solid ${isDragging ? 'rgba(196,134,42,0.85)' : 'rgba(196,134,42,0.35)'}`,
+        borderRadius: '0 0 10px 10px',
+        boxShadow: '0 0 0 1px rgba(196,134,42,0.05), 0 32px 80px rgba(0,0,0,0.75)',
         overflow: 'hidden',
         transition: 'border-color 120ms',
       }}
     >
-      {/* ── Drag-over overlay ──────────────────────────────────────────── */}
-      {isDraggingOver && (
+      {/* ── Drag-over overlay ─────────────────────────────────────────── */}
+      {isDragging && (
         <div style={{
           position: 'absolute', inset: 0, zIndex: 50,
-          background: 'rgba(183,255,0,0.05)',
+          background: 'rgba(196,134,42,0.04)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           pointerEvents: 'none',
         }}>
           <div style={{
-            border: '2px dashed rgba(183,255,0,0.5)', borderRadius: 10,
+            border: '2px dashed rgba(196,134,42,0.55)', borderRadius: 10,
             padding: '20px 40px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>🎵</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#B7FF00', letterSpacing: '0.08em' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#C4862A', letterSpacing: '0.08em',
+              textShadow: '0 0 10px rgba(196,134,42,0.4)' }}>
               DROP AUDIO FILE
             </div>
-            <div style={{ fontSize: 10, color: '#606040', marginTop: 4 }}>MP3 · WAV · FLAC · OGG · AAC</div>
+            <div style={{ fontSize: 10, color: '#6e6660', marginTop: 4 }}>MP3 · WAV · FLAC · OGG · AAC</div>
           </div>
         </div>
       )}
@@ -155,51 +166,54 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         }}
       />
 
-      {/* ── Toolbar ────────────────────────────────────────────────────── */}
+      {/* ── Toolbar ──────────────────────────────────────────────────────── */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-        padding: '8px 14px', background: '#0b0b15',
-        borderBottom: '1px solid #151525',
+        display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+        padding: '8px 14px',
+        background: 'linear-gradient(180deg,#1c1916 0%,#111008 100%)',
+        borderBottom: '1px solid #2c2825',
+        boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.4)',
       }}>
 
-        {/* Source selector */}
-        <div style={{ display: 'flex', gap: 2 }}>
+        {/* ── Source selector ── */}
+        <div style={{ display: 'flex', gap: 3 }}>
           {([
             { mode: 'pink-noise' as AudioSourceMode, icon: '🎵', label: 'PINK' },
             { mode: 'microphone' as AudioSourceMode, icon: '🎤', label: 'MIC'  },
             { mode: 'file'       as AudioSourceMode, icon: '📁', label: 'FILE' },
-          ]).map(({ mode, icon, label }) => (
-            <button
-              key={mode}
-              onClick={() => {
-                if (isPlaying) onStop();
-                onSourceMode(mode);
-                onClearError();
-                if (mode === 'file') fileInputRef.current?.click();
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 3,
-                padding: '4px 8px', borderRadius: 4, cursor: 'pointer',
-                fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
-                border: `1px solid ${sourceMode === mode ? '#B7FF0055' : '#1e1e2e'}`,
-                background: sourceMode === mode ? 'rgba(183,255,0,0.09)' : 'transparent',
-                color: sourceMode === mode ? '#B7FF00' : '#404055',
-                transition: 'all 120ms',
-              }}
-            >
-              <span style={{ fontSize: 10 }}>{icon}</span>
-              {label}
-            </button>
-          ))}
+          ]).map(({ mode, icon, label }) => {
+            const on = sourceMode === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => {
+                  if (isPlaying) onStop();
+                  onSourceMode(mode);
+                  onClearError();
+                  if (mode === 'file') fileInputRef.current?.click();
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 3,
+                  padding: '4px 9px', borderRadius: 4,
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
+                  ...metalBtn(on),
+                }}
+              >
+                <span style={{ fontSize: 10 }}>{icon}</span>
+                {label}
+              </button>
+            );
+          })}
           {sourceMode === 'file' && fileReady && fileName && (
             <button
               onClick={() => fileInputRef.current?.click()}
               title={`Loaded: ${fileName} — click to change`}
               style={{
-                padding: '4px 8px', borderRadius: 4, cursor: 'pointer',
+                padding: '4px 8px', borderRadius: 4,
                 fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
-                border: '1px solid #252535', background: '#13131e', color: '#606080',
                 maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                ...metalBtn(false),
+                color: '#8a7a6a',
               }}
             >
               {fileName.length > 13 ? `${fileName.slice(0, 11)}…` : fileName}
@@ -207,73 +221,87 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
           )}
         </div>
 
-        <div style={{ width: 1, height: 16, background: '#1e1e2e' }} />
+        {/* Divider */}
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
 
-        {/* Play / Stop */}
+        {/* ── Play / Stop ── */}
         <button
           onClick={isPlaying ? onStop : onPlay}
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
-            padding: '5px 14px', borderRadius: 5, cursor: 'pointer',
+            padding: '5px 14px', borderRadius: 5,
             fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-            border: `1px solid ${isPlaying ? '#ef444488' : '#B7FF0088'}`,
-            background: isPlaying ? 'rgba(239,68,68,0.12)' : 'rgba(183,255,0,0.1)',
-            color: isPlaying ? '#ef4444' : '#B7FF00',
-            transition: 'all 150ms',
+            ...(isPlaying
+              ? {
+                  background: 'linear-gradient(180deg,#2a0a0a 0%,#1e0808 100%)',
+                  border: '1px solid #ef444455',
+                  borderTop: '1px solid #ef444440',
+                  color: '#ef8888',
+                  boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7), 0 0 7px rgba(239,68,68,0.15)',
+                }
+              : {
+                  background: 'linear-gradient(180deg,#2e2610 0%,#1e1a0a 50%,#252010 100%)',
+                  border: '1px solid rgba(196,134,42,0.55)',
+                  borderTop: '1px solid rgba(196,134,42,0.40)',
+                  color: '#C4862A',
+                  boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.08), 0 0 8px rgba(196,134,42,0.20)',
+                }),
+            cursor: 'pointer', transition: 'all 150ms',
           }}
         >
           <span style={{ fontSize: 8 }}>{isPlaying ? '■' : '▶'}</span>
           {isPlaying ? 'STOP' : 'PLAY'}
         </button>
 
-        <div style={{ width: 1, height: 16, background: '#1e1e2e' }} />
+        {/* Divider */}
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
 
-        {/* A/B comparison */}
+        {/* ── A/B comparison ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ fontSize: 9, color: '#404055', letterSpacing: '0.07em' }}>A/B</span>
+          <span style={{ fontSize: 9, color: '#6e6660', letterSpacing: '0.07em' }}>A/B</span>
           {(['A', 'B'] as const).map(slot => (
             <button
               key={slot}
               onClick={() => slot === activeSlot ? onCaptureSlot(slot) : onToggleAB()}
               title={slot === activeSlot ? `Capture to slot ${slot}` : `Switch to slot ${slot}`}
               style={{
-                width: 26, height: 24, borderRadius: 3, cursor: 'pointer',
+                width: 28, height: 24, borderRadius: 3,
                 fontSize: 10, fontWeight: 800,
-                border: `1px solid ${slot === activeSlot ? '#B7FF0070' : '#252535'}`,
-                background: slot === activeSlot ? 'rgba(183,255,0,0.12)' : '#0f0f18',
-                color: slot === activeSlot ? '#B7FF00' : '#404055',
-                transition: 'all 150ms',
+                ...metalBtn(slot === activeSlot),
               }}
             >{slot}</button>
           ))}
           <button
             onClick={onToggleAB}
             title="Swap A ↔ B"
-            style={{
-              width: 26, height: 24, borderRadius: 3, cursor: 'pointer', fontSize: 12,
-              border: '1px solid #252535', background: 'transparent', color: '#505065',
-            }}
+            style={{ width: 28, height: 24, borderRadius: 3, fontSize: 12, ...metalBtn(false) }}
           >⇄</button>
         </div>
 
-        <div style={{ width: 1, height: 16, background: '#1e1e2e' }} />
+        {/* Divider */}
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
 
-        {/* Bypass */}
+        {/* ── Bypass ── */}
         <button
           onClick={onToggleBypass}
           style={{
-            padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+            padding: '4px 10px', borderRadius: 4,
             fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-            border: `1px solid ${bypass ? '#ef444466' : '#33334a'}`,
-            background: bypass ? 'rgba(239,68,68,0.1)' : 'transparent',
-            color: bypass ? '#ef4444' : '#484860',
-            transition: 'all 150ms',
+            ...(bypass
+              ? {
+                  background: 'linear-gradient(180deg,#2a0808 0%,#1e0606 100%)',
+                  border: '1px solid #ef444455',
+                  color: '#ef8888',
+                  boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7)',
+                }
+              : { ...metalBtn(false), color: '#524c47' }),
+            cursor: 'pointer', transition: 'all 150ms',
           }}
         >{bypass ? 'BYPASSED' : 'BYPASS'}</button>
 
         <div style={{ flex: 1 }} />
 
-        {/* Undo / Redo / Reset */}
+        {/* ── Undo / Redo / Reset ── */}
         <div style={{ display: 'flex', gap: 3 }}>
           {[
             { icon: '↩', act: onUndo,  dis: !canUndo, title: 'Undo (Ctrl+Z)' },
@@ -281,90 +309,75 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             { icon: '⟳', act: onReset, dis: false,    title: 'Reset to default' },
           ].map(b => (
             <button key={b.icon} onClick={b.act} disabled={b.dis} title={b.title} style={{
-              width: 26, height: 26, borderRadius: 4,
+              width: 28, height: 26, borderRadius: 4,
               cursor: b.dis ? 'not-allowed' : 'pointer',
-              background: '#0f0f18', border: '1px solid #1e1e2e',
-              color: b.dis ? '#222230' : '#606080', fontSize: 13,
+              fontSize: 13, opacity: b.dis ? 0.35 : 1,
+              ...metalBtn(false),
+              color: '#8a8078',
             }}>{b.icon}</button>
           ))}
         </div>
 
-        <div style={{ width: 1, height: 16, background: '#1e1e2e' }} />
+        {/* Divider */}
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
 
-        {/* Presets + Help */}
+        {/* ── Presets + Help ── */}
         <button
           onClick={onOpenPresets}
           style={{
             display: 'flex', alignItems: 'center', gap: 4,
-            padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+            padding: '4px 10px', borderRadius: 4,
             fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
-            border: '1px solid #252535', background: 'transparent', color: '#606080',
-            transition: 'all 120ms',
+            ...metalBtn(false), color: '#8a8078',
           }}
         >🎛 PRESETS</button>
 
         <button
           onClick={onShowHelp}
           title="Keyboard shortcuts (?)"
-          style={{
-            width: 26, height: 26, borderRadius: 4, cursor: 'pointer',
-            background: '#0f0f18', border: '1px solid #1e1e2e', color: '#606080', fontSize: 12,
-          }}
+          style={{ width: 28, height: 26, borderRadius: 4, fontSize: 12, ...metalBtn(false), color: '#8a8078' }}
         >?</button>
       </div>
 
-      {/* ── Source error banner ─────────────────────────────────────── */}
+      {/* ── Source error banner ──────────────────────────────────────── */}
       {sourceError && (
         <div style={{
-          padding: '7px 14px', background: 'rgba(239,68,68,0.08)',
-          borderBottom: '1px solid rgba(239,68,68,0.2)',
+          padding: '7px 14px', background: 'rgba(239,68,68,0.07)',
+          borderBottom: '1px solid rgba(239,68,68,0.18)',
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
           <span style={{ fontSize: 12 }}>⚠️</span>
           <span style={{ fontSize: 11, color: '#ef8888', flex: 1 }}>{sourceError}</span>
-          <button
-            onClick={onClearError}
-            style={{ background: 'none', border: 'none', color: '#604040', cursor: 'pointer', fontSize: 14 }}
-          >✕</button>
+          <button onClick={onClearError}
+            style={{ background: 'none', border: 'none', color: '#705050', cursor: 'pointer', fontSize: 14 }}>✕</button>
         </div>
       )}
 
-      {/* ── Seek / progress bar (file mode only) ───────────────────── */}
+      {/* ── Seek / progress bar (file mode only) ──────────────────────── */}
       {sourceMode === 'file' && fileReady && fileDuration > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10,
-          padding: '5px 14px', background: '#080810',
-          borderBottom: '1px solid #111120',
+          padding: '5px 14px',
+          background: 'linear-gradient(180deg,#0f0d0a 0%,#0a0908 100%)',
+          borderBottom: '1px solid #252220',
         }}>
-          <span style={{
-            fontSize: 9, fontFamily: 'monospace', color: '#505068',
-            minWidth: 30, textAlign: 'right',
-          }}>
+          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#6e6660', minWidth: 30, textAlign: 'right' }}>
             {fmtTime(fileCurrentTime)}
           </span>
           <input
-            type="range"
-            min={0}
-            max={fileDuration}
-            step={0.1}
+            type="range" min={0} max={fileDuration} step={0.1}
             value={fileCurrentTime}
             onChange={e => onSeek(parseFloat(e.target.value))}
-            style={{
-              flex: 1, height: 3, cursor: 'pointer',
-              accentColor: '#B7FF00',
-            }}
+            style={{ flex: 1, height: 3, cursor: 'pointer', accentColor: '#C4862A' }}
           />
-          <span style={{
-            fontSize: 9, fontFamily: 'monospace', color: '#303040',
-            minWidth: 30,
-          }}>
+          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#3c3733', minWidth: 30 }}>
             {fmtTime(fileDuration)}
           </span>
         </div>
       )}
 
-      {/* ── Frequency axis ──────────────────────────────────────────── */}
-      <div style={{ display: 'flex', background: '#0b0b12' }}>
+      {/* ── Frequency axis ────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', background: '#0f0d0a' }}>
         <div style={{ width: 34, flexShrink: 0 }} />
         <div style={{ flex: 1, position: 'relative', height: 16 }}>
           {FREQ_TICKS.map(f => {
@@ -372,7 +385,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             return (
               <span key={f} style={{
                 position: 'absolute', left: `${pct}%`,
-                fontSize: 8, color: '#2d2d40',
+                fontSize: 8, color: '#524c47',
                 transform: 'translateX(-50%)',
                 letterSpacing: '0.04em', lineHeight: '16px',
               }}>{fmtFreq(f)}</span>
@@ -381,9 +394,8 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         </div>
       </div>
 
-      {/* ── EQ canvas + dB rail ─────────────────────────────────────── */}
-      <div style={{ display: 'flex', background: '#0b0b12' }}>
-        {/* dB labels */}
+      {/* ── EQ canvas + dB rail ───────────────────────────────────────── */}
+      <div style={{ display: 'flex', background: '#0a0908' }}>
         <div style={{
           width: 34, flexShrink: 0,
           display: 'flex', flexDirection: 'column', justifyContent: 'space-around',
@@ -391,12 +403,12 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         }}>
           {DB_LABELS.map(db => (
             <span key={db} style={{
-              fontSize: 8, color: db === 0 ? '#555568' : '#2a2a38',
+              fontSize: 8,
+              color: db === 0 ? '#6e6660' : '#3c3733',
               textAlign: 'right', paddingRight: 5, fontFamily: 'monospace',
             }}>{db > 0 ? `+${db}` : db}</span>
           ))}
         </div>
-        {/* Canvas */}
         <div style={{ flex: 1, minWidth: 0, height: 224 }}>
           <FruityEQCanvas
             curve={curve}
@@ -410,12 +422,12 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         </div>
       </div>
 
-      {/* ── Vertical faders ─────────────────────────────────────────── */}
+      {/* ── Vertical faders ───────────────────────────────────────────── */}
       <div style={{
         display: 'flex',
-        background: '#0c0c16',
-        borderTop: '1px solid #151525',
-        borderBottom: '1px solid #151525',
+        background: 'linear-gradient(180deg,#141210 0%,#0f0d0a 100%)',
+        borderTop: '1px solid #2c2825',
+        borderBottom: '1px solid #2c2825',
       }}>
         {state.bands.map((band, idx) => (
           <VerticalFader
@@ -430,7 +442,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         ))}
       </div>
 
-      {/* ── AI Analysis ─────────────────────────────────────────────── */}
+      {/* ── AI Analysis ───────────────────────────────────────────────── */}
       <AIPanel
         spectrumData={spectrumData}
         isPlaying={isPlaying}
@@ -453,7 +465,7 @@ interface FaderProps {
 }
 
 function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggleEnable }: FaderProps) {
-  const color = BAND_COLORS[band.id] ?? '#B7FF00';
+  const color  = BAND_COLORS[band.id] ?? '#C4862A';
   const noGain = band.type === FilterType.HighPass || band.type === FilterType.LowPass;
 
   return (
@@ -463,30 +475,33 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         flex: 1, minWidth: 0,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         padding: '10px 2px 10px',
-        borderRight: isLast ? 'none' : '1px solid #151525',
-        background: selected ? 'rgba(255,255,255,0.025)' : 'transparent',
+        borderRight: isLast ? 'none' : '1px solid #252220',
+        background: selected
+          ? 'linear-gradient(180deg,rgba(196,134,42,0.05) 0%,transparent 100%)'
+          : 'transparent',
         cursor: 'pointer',
         transition: 'background 150ms',
         userSelect: 'none',
       }}
     >
-      {/* Band badge + type label */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, marginBottom: 8 }}>
         <div style={{
           width: 18, height: 18, borderRadius: '50%',
-          background: band.enabled ? color : '#1e1e2e',
-          border: `1px solid ${band.enabled ? color + '60' : '#252535'}`,
+          background: band.enabled
+            ? `radial-gradient(circle at 35% 35%, ${color}cc, ${color}66)`
+            : '#252220',
+          border: `1px solid ${band.enabled ? color + '70' : '#3c3733'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 9, fontWeight: 800,
-          color: band.enabled ? '#000' : '#404040',
+          color: band.enabled ? '#0a0908' : '#524c47',
+          boxShadow: band.enabled ? `0 0 4px ${color}30` : 'none',
           transition: 'all 200ms',
         }}>{band.id + 1}</div>
-        <span style={{
-          fontSize: 7, color: '#404055', letterSpacing: '0.06em', fontWeight: 700,
-        }}>{TYPE_SHORT[band.type]}</span>
+        <span style={{ fontSize: 7, color: '#524c47', letterSpacing: '0.06em', fontWeight: 700 }}>
+          {TYPE_SHORT[band.type]}
+        </span>
       </div>
 
-      {/* Vertical gain slider */}
       <div
         style={{
           position: 'relative', width: '100%', height: 82,
@@ -496,25 +511,21 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Center "zero" tick */}
         <div style={{
           position: 'absolute', top: '50%', left: '10%',
           width: '80%', height: 1,
-          background: 'rgba(255,255,255,0.05)',
+          background: 'rgba(255,235,200,0.06)',
           pointerEvents: 'none',
         }} />
         <input
           type="range"
-          min={-24}
-          max={24}
-          step={0.1}
+          min={-24} max={24} step={0.1}
           value={noGain ? 0 : band.gain}
           disabled={noGain || !band.enabled}
           onChange={e => onGainChange(parseFloat(e.target.value))}
           style={{
             position: 'absolute',
-            width: 80,
-            height: 4,
+            width: 80, height: 4,
             transform: 'rotate(-90deg)',
             cursor: noGain ? 'default' : 'pointer',
             accentColor: color,
@@ -522,37 +533,39 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         />
       </div>
 
-      {/* Gain value */}
       <span style={{
         fontSize: 8, fontFamily: 'monospace', marginTop: 2,
-        color: noGain ? '#252535'
+        color: noGain ? '#3c3733'
           : band.gain > 0.1 ? color
-          : band.gain < -0.1 ? '#ef8888'
-          : '#404055',
+          : band.gain < -0.1 ? '#C45A3A'
+          : '#524c47',
         minWidth: 38, textAlign: 'center',
         transition: 'color 150ms',
       }}>
         {noGain ? '—' : `${band.gain >= 0 ? '+' : ''}${band.gain.toFixed(1)}`}
       </span>
 
-      {/* Frequency */}
       <span style={{
-        fontSize: 8, color: selected ? '#8080a0' : '#383848',
+        fontSize: 8,
+        color: selected ? '#C4862A' : '#3c3733',
         marginTop: 2, letterSpacing: '0.03em',
         transition: 'color 150ms',
       }}>
         {fmtFreq(band.frequency)}
       </span>
 
-      {/* Enable toggle pill */}
       <button
         onClick={e => { e.stopPropagation(); onToggleEnable(); }}
         title={band.enabled ? 'Disable band' : 'Enable band'}
         style={{
-          marginTop: 7, width: 22, height: 7, borderRadius: 4,
-          border: 'none', cursor: 'pointer',
-          background: band.enabled ? color : '#252535',
-          transition: 'background 200ms',
+          marginTop: 7, width: 24, height: 8, borderRadius: 4,
+          border: `1px solid ${band.enabled ? color + '60' : '#3c3733'}`,
+          cursor: 'pointer',
+          background: band.enabled
+            ? `linear-gradient(to right, ${color}aa, ${color}66)`
+            : 'linear-gradient(180deg,#2c2825 0%,#1e1b18 100%)',
+          boxShadow: band.enabled ? `0 0 5px ${color}30` : 'none',
+          transition: 'all 200ms',
         }}
       />
     </div>
