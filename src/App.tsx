@@ -190,11 +190,7 @@ export function App() {
           onSeek={seek}
         />
 
-        <SectionLabel>EQ OPERATIONS</SectionLabel>
-        <OperationsGrid onApply={handleOperation} />
-
-        <SectionLabel>PRO TIPS</SectionLabel>
-        <ProTipsAccordion />
+        <ToolsPanel onApply={handleOperation} />
 
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <div style={{ marginTop: 72, display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -238,6 +234,99 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
         flex: 1, height: 1,
         background: 'linear-gradient(to right, rgba(196,134,42,0.12), transparent)',
       }} />
+    </div>
+  );
+}
+
+// ── Combined Tools Panel (EQ Operations + Pro Tips) ───────────────────────────
+
+function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./dsp').EQBand extends never ? never : Partial<import('./dsp').EQBand>) => void }) {
+  const [open, setOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<'ops' | 'tips'>('ops');
+
+  return (
+    <div style={{ marginTop: 28 }}>
+      {/* ── Collapsible header bar ── */}
+      <div
+        onClick={() => setOpen(v => !v)}
+        role="button"
+        aria-expanded={open}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 0,
+          background: open
+            ? 'linear-gradient(180deg,#2a2520 0%,#1e1b16 100%)'
+            : 'linear-gradient(180deg,#3a3530 0%,#252220 55%,#2e2825 100%)',
+          border: '1px solid #4a4440',
+          borderTop: `1px solid ${open ? 'rgba(196,134,42,0.45)' : '#5a5450'}`,
+          borderBottom: open ? '1px solid #2c2825' : '1px solid #1a1612',
+          borderRadius: open ? '6px 6px 0 0' : '6px',
+          cursor: 'pointer',
+          boxShadow: open
+            ? 'inset 0 1px 0 rgba(255,235,200,0.06)'
+            : 'inset 0 1px 0 rgba(255,235,200,0.07), inset 0 -1px 0 rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.5)',
+          transition: 'all 180ms',
+          overflow: 'hidden',
+          userSelect: 'none',
+        }}
+      >
+        {/* Left amber accent strip */}
+        <div style={{
+          width: 3, alignSelf: 'stretch', flexShrink: 0,
+          background: open
+            ? 'linear-gradient(180deg, rgba(196,134,42,0.7), rgba(196,134,42,0.3))'
+            : 'rgba(196,134,42,0.2)',
+          transition: 'background 180ms',
+        }} />
+
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px' }}>
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {(['ops', 'tips'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={e => { e.stopPropagation(); setOpen(true); setActiveTab(tab); }}
+                style={{
+                  padding: '3px 10px', borderRadius: 3,
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.12em',
+                  cursor: 'pointer',
+                  background: (open && activeTab === tab)
+                    ? 'linear-gradient(180deg,#1a1408 0%,#241c0a 100%)'
+                    : 'transparent',
+                  border: `1px solid ${(open && activeTab === tab) ? 'rgba(196,134,42,0.5)' : 'transparent'}`,
+                  color: (open && activeTab === tab) ? '#C4862A' : '#6e6660',
+                  boxShadow: (open && activeTab === tab) ? 'inset 0 1px 3px rgba(0,0,0,0.5)' : 'none',
+                  transition: 'all 150ms',
+                }}
+              >
+                {tab === 'ops' ? 'EQ OPERATIONS' : 'PRO TIPS'}
+              </button>
+            ))}
+          </div>
+
+          {/* Spacer + chevron */}
+          <div style={{ flex: 1 }} />
+          <span style={{
+            fontSize: 10, color: open ? '#C4862A' : '#524c47',
+            transform: open ? 'rotate(180deg)' : 'rotate(0)',
+            display: 'inline-block', transition: 'all 200ms',
+          }}>▾</span>
+        </div>
+      </div>
+
+      {/* ── Collapsible body ── */}
+      {open && (
+        <div style={{
+          border: '1px solid #4a4440',
+          borderTop: 'none',
+          borderRadius: '0 0 6px 6px',
+          background: 'linear-gradient(180deg,#181510 0%,#111008 100%)',
+          padding: '16px 16px 18px',
+          boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.3)',
+        }}>
+          {activeTab === 'ops' && <OperationsGrid onApply={onApply} />}
+          {activeTab === 'tips' && <ProTipsAccordion />}
+        </div>
+      )}
     </div>
   );
 }
