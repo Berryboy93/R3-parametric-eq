@@ -5,10 +5,11 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { PresetManager } from '../dsp/presets/preset-manager';
+import { ApiPresetStorage } from '../dsp/presets/api-storage';
 import type { EQPreset, EQState } from '../dsp';
 
 export function usePresetManager() {
-  const managerRef = useRef(new PresetManager());
+  const managerRef = useRef(new PresetManager(new ApiPresetStorage()));
   const [userPresets, setUserPresets] = useState<EQPreset[]>([]);
   const [initialized, setInitialized] = useState(false);
 
