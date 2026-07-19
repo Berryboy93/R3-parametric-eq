@@ -1,21 +1,22 @@
 /**
  * BandStrip — horizontal row of 8 compact per-band control cards
- * Smoky metallic aesthetic
+ * R3 NATIVE RFQ-official color system
  */
 
 import { useRef } from 'react';
 import { FilterType } from '../dsp';
 import type { EQBand } from '../dsp';
 
+// All bands use Neon Green per R3 NATIVE brand spec (RFQ v1.0)
 export const BAND_COLORS = [
-  '#CF8A3A', // 1 — warm copper
-  '#7AAABB', // 2 — steel blue
-  '#76A876', // 3 — verdigris
-  '#C9A840', // 4 — aged brass
-  '#C96A55', // 5 — iron oxide
-  '#5B98C8', // 6 — gunmetal blue
-  '#9978C8', // 7 — tarnished pewter
-  '#B8924A', // 8 — aged bronze
+  '#B7FF00', // 1 HP
+  '#B7FF00', // 2 LS
+  '#B7FF00', // 3 PK
+  '#B7FF00', // 4 PK
+  '#B7FF00', // 5 PK
+  '#B7FF00', // 6 PK
+  '#B7FF00', // 7 HS
+  '#B7FF00', // 8 LP
 ];
 
 const TYPE_LABELS: Record<FilterType, string> = {
@@ -68,7 +69,7 @@ export function BandStrip({ bands, selectedBand, onSelectBand, onUpdate }: {
 }
 
 function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
-  const color = BAND_COLORS[band.id] ?? '#C4862A';
+  const color = BAND_COLORS[band.id] ?? '#B7FF00';
   const hasGain = band.type !== FilterType.HighPass && band.type !== FilterType.LowPass;
 
   return (
@@ -77,16 +78,16 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
       style={{
         flex: 1, minWidth: 0,
         background: selected
-          ? `linear-gradient(180deg,#252018 0%,#1e1c16 100%)`
-          : `linear-gradient(180deg,#1c1a16 0%,#161410 100%)`,
-        border: `1px solid ${selected ? color + '70' : '#3a3530'}`,
+          ? `rgba(183,255,0,0.05)`
+          : `#141414`,
+        border: `1px solid ${selected ? color + '70' : '#2a2a2a'}`,
         borderRadius: 6,
         padding: '8px 8px 6px',
         cursor: 'pointer',
         display: 'flex', flexDirection: 'column', gap: 5,
         boxShadow: selected
-          ? `inset 0 1px 0 rgba(255,235,200,0.06), 0 0 10px ${color}18`
-          : 'inset 0 1px 0 rgba(255,235,200,0.04)',
+          ? `inset 0 1px 0 rgba(183,255,0,0.08), 0 0 10px rgba(183,255,0,0.08)`
+          : 'none',
         transition: 'all 150ms',
       }}
     >
@@ -96,13 +97,13 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
           width: 18, height: 18, borderRadius: '50%',
           background: band.enabled
             ? `radial-gradient(circle at 35% 35%,${color}cc,${color}66)`
-            : '#2c2825',
-          border: `1px solid ${band.enabled ? color + '80' : '#3a3530'}`,
+            : '#242424',
+          border: `1px solid ${band.enabled ? color + '80' : '#2a2a2a'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 9, fontWeight: 800,
-          color: band.enabled ? '#0a0908' : '#524c47',
+          color: band.enabled ? '#080808' : '#484848',
           flexShrink: 0, cursor: 'pointer', transition: 'all 150ms',
-          boxShadow: band.enabled ? `0 0 4px ${color}40` : 'none',
+          boxShadow: band.enabled ? `0 0 6px ${color}40` : 'none',
         }}
           onClick={e => { e.stopPropagation(); onUpdate({ enabled: !band.enabled }); }}
           title={band.enabled ? 'Click to disable' : 'Click to enable'}
@@ -119,7 +120,7 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
           }}
         >
           {TYPE_OPTIONS.map(o => (
-            <option key={o.value} value={o.value} style={{ background: '#1e1b18', color: '#d8d0c4' }}>
+            <option key={o.value} value={o.value} style={{ background: '#141414', color: '#E6E6E6' }}>
               {o.label}
             </option>
           ))}
@@ -183,9 +184,9 @@ function SliderRow({ label, value, display, unit, min, max, step, color, logScal
   return (
     <div onClick={onClick} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontSize: 7, color: '#524c47', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 9, color: '#a09080', fontFamily: 'monospace' }}>
-          {display}<span style={{ fontSize: 7, color: '#524c47', marginLeft: 1 }}>{unit}</span>
+        <span style={{ fontSize: 7, color: '#484848', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 9, color: '#909090', fontFamily: 'monospace' }}>
+          {display}<span style={{ fontSize: 7, color: '#484848', marginLeft: 1 }}>{unit}</span>
         </span>
       </div>
       <input

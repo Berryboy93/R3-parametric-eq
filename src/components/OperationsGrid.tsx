@@ -1,5 +1,6 @@
 /**
- * OperationsGrid — 5 metallic quick-apply EQ buttons
+ * OperationsGrid — 5 quick-apply EQ buttons
+ * R3 NATIVE RFQ-official color system
  */
 
 import { FilterType } from '../dsp';
@@ -35,7 +36,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Remove low-end rumble & noise below the mix',
     detail: '80 Hz · 12 dB/oct',
     shape: 'hp',
-    color: '#9978C8',  // pewter violet
+    color: '#B7FF00',
     bandId: 0,
     update: { enabled: true, type: FilterType.HighPass, frequency: 80, q: 0.7 },
   },
@@ -45,7 +46,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Eliminate boxiness and low-mid buildup',
     detail: '300 Hz · −5 dB',
     shape: 'peak-cut',
-    color: '#C96A55',  // iron oxide
+    color: '#B7FF00',
     bandId: 2,
     update: { enabled: true, type: FilterType.Peaking, frequency: 300, gain: -5, q: 1.2 },
   },
@@ -55,7 +56,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Add cut-through clarity and vocal intelligibility',
     detail: '3 kHz · +3 dB',
     shape: 'peak-boost',
-    color: '#76A876',  // verdigris
+    color: '#B7FF00',
     bandId: 4,
     update: { enabled: true, type: FilterType.Peaking, frequency: 3000, gain: 3, q: 1.5 },
   },
@@ -65,7 +66,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Tame aggressive high-mid bite and sibilance',
     detail: '4 kHz · −3 dB',
     shape: 'peak-cut',
-    color: '#7AAABB',  // steel blue
+    color: '#B7FF00',
     bandId: 5,
     update: { enabled: true, type: FilterType.Peaking, frequency: 4000, gain: -3, q: 2.0 },
   },
@@ -75,7 +76,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Smooth out harsh high-frequency noise and hiss',
     detail: '16 kHz · 12 dB/oct',
     shape: 'lp',
-    color: '#B8924A',  // aged bronze
+    color: '#B7FF00',
     bandId: 7,
     update: { enabled: true, type: FilterType.LowPass, frequency: 16000, q: 0.7 },
   },
@@ -103,58 +104,57 @@ function OperationButton({ op, onApply }: { op: Operation; onApply: () => void }
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '6px 14px',
-        background: 'linear-gradient(180deg,#3a3530 0%,#252220 55%,#2e2825 100%)',
-        border: `1px solid #4a4440`,
-        borderTop: `1px solid #5a5450`,
-        borderBottom: `1px solid #1a1612`,
+        background: '#1a1a1a',
+        border: `1px solid #2e2e2e`,
+        borderTop: `1px solid #3a3a3a`,
+        borderBottom: `1px solid #111111`,
         borderRadius: 5,
         cursor: 'pointer',
         outline: 'none',
         userSelect: 'none',
-        boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.07), inset 0 -1px 0 rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.55)',
-        transition: 'box-shadow 80ms, filter 80ms',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.6)',
+        transition: 'box-shadow 80ms, filter 80ms, border-color 80ms',
       }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLButtonElement;
-        el.style.filter = 'brightness(1.15)';
-        el.style.borderColor = `${op.color}60`;
+        el.style.filter = 'brightness(1.2)';
+        el.style.borderColor = 'rgba(183,255,0,0.50)';
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLButtonElement;
         el.style.filter = '';
-        el.style.borderColor = '#4a4440';
+        el.style.borderColor = '#2e2e2e';
         el.style.transform = 'scale(1)';
       }}
       onMouseDown={e => {
         const el = e.currentTarget as HTMLButtonElement;
         el.style.transform = 'scale(0.97)';
-        el.style.boxShadow = 'inset 0 2px 5px rgba(0,0,0,0.7), 0 0 6px rgba(196,134,42,0.15)';
+        el.style.boxShadow = 'inset 0 2px 5px rgba(0,0,0,0.7), 0 0 6px rgba(183,255,0,0.12)';
       }}
       onMouseUp={e => {
         const el = e.currentTarget as HTMLButtonElement;
         el.style.transform = 'scale(1)';
-        el.style.boxShadow = 'inset 0 1px 0 rgba(255,235,200,0.07), inset 0 -1px 0 rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.55)';
+        el.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.6)';
       }}
     >
-      {/* Rivet indicator dot */}
+      {/* Neon indicator dot */}
       <span style={{
         width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-        background: `radial-gradient(circle at 35% 35%, ${op.color}dd, ${op.color}88)`,
-        boxShadow: `0 0 5px ${op.color}60, inset 0 1px 0 rgba(255,255,255,0.2)`,
+        background: `radial-gradient(circle at 35% 35%, #d4ff40, #B7FF00)`,
+        boxShadow: `0 0 6px rgba(183,255,0,0.60)`,
       }} />
       {/* Label */}
       <span style={{
-        fontSize: 11, fontWeight: 700, color: '#c8c0b4',
+        fontSize: 11, fontWeight: 700, color: '#E6E6E6',
         letterSpacing: '0.05em', whiteSpace: 'nowrap',
         fontFamily: 'Montserrat, sans-serif',
-        textShadow: '0 1px 1px rgba(0,0,0,0.6)',
       }}>
         {op.name}
       </span>
       {/* Detail */}
       <span style={{
         fontSize: 9, fontFamily: 'monospace',
-        color: op.color, opacity: 0.75, letterSpacing: '0.03em',
+        color: '#B7FF00', opacity: 0.65, letterSpacing: '0.03em',
       }}>
         {op.detail}
       </span>

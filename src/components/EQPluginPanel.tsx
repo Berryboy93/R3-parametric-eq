@@ -1,10 +1,10 @@
 /**
- * EQPluginPanel — EQ plugin with metallic smoky-rustic theme
+ * EQPluginPanel — EQ plugin with R3 NATIVE RFQ-official color system
  * Toolbar · canvas · vertical faders · AI
  */
 
 import { useRef, useState, useCallback } from 'react';
-import { FruityEQCanvas } from './FruityEQCanvas';
+import { R3EQCanvas } from './R3EQCanvas';
 import { AIPanel } from './AIPanel';
 import { BAND_COLORS } from './BandStrip';
 import { FilterType } from '../dsp';
@@ -68,18 +68,18 @@ function fmtTime(s: number) {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
-// ── Shared metallic button helper ─────────────────────────────────────────────
-const metalBtn = (active: boolean, color = '#C4862A'): React.CSSProperties => ({
+// ── Shared R3 button helper ────────────────────────────────────────────────────
+const r3Btn = (active: boolean, color = '#B7FF00'): React.CSSProperties => ({
   background: active
-    ? `linear-gradient(180deg,#1a1408 0%,#241c0a 45%,#1e1810 100%)`
-    : `linear-gradient(180deg,#3a3530 0%,#252220 55%,#2e2825 100%)`,
-  border: `1px solid ${active ? color + '70' : '#4a4440'}`,
-  borderTop: `1px solid ${active ? color + '50' : '#5a5450'}`,
-  borderBottom: `1px solid ${active ? color + '40' : '#1a1612'}`,
-  color: active ? color : '#706860',
+    ? `rgba(183,255,0,0.08)`
+    : `#1a1a1a`,
+  border: `1px solid ${active ? color + '70' : '#3a3a3a'}`,
+  borderTop: `1px solid ${active ? color + '50' : '#444444'}`,
+  borderBottom: `1px solid ${active ? color + '40' : '#111111'}`,
+  color: active ? color : '#606060',
   boxShadow: active
-    ? `inset 0 2px 5px rgba(0,0,0,0.7), 0 0 7px ${color}22`
-    : 'inset 0 1px 0 rgba(255,235,200,0.07), inset 0 -1px 0 rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.55)',
+    ? `inset 0 2px 5px rgba(0,0,0,0.7), 0 0 8px ${color}22`
+    : 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.6)',
   transition: 'all 120ms',
   cursor: 'pointer',
 });
@@ -122,11 +122,11 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
       onDrop={handleDrop}
       style={{
         position: 'relative',
-        background: 'linear-gradient(180deg,#181510 0%,#111008 100%)',
-        border: `1px solid ${isDragging ? 'rgba(196,134,42,0.55)' : '#3a3530'}`,
-        borderTop: `2px solid ${isDragging ? 'rgba(196,134,42,0.85)' : 'rgba(196,134,42,0.35)'}`,
+        background: '#111111',
+        border: `1px solid ${isDragging ? 'rgba(183,255,0,0.55)' : '#242424'}`,
+        borderTop: `2px solid ${isDragging ? 'rgba(183,255,0,0.85)' : 'rgba(183,255,0,0.30)'}`,
         borderRadius: '0 0 10px 10px',
-        boxShadow: '0 0 0 1px rgba(196,134,42,0.05), 0 32px 80px rgba(0,0,0,0.75)',
+        boxShadow: '0 0 0 1px rgba(183,255,0,0.04), 0 32px 80px rgba(0,0,0,0.75)',
         overflow: 'hidden',
         transition: 'border-color 120ms',
       }}
@@ -135,20 +135,20 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
       {isDragging && (
         <div style={{
           position: 'absolute', inset: 0, zIndex: 50,
-          background: 'rgba(196,134,42,0.04)',
+          background: 'rgba(183,255,0,0.03)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           pointerEvents: 'none',
         }}>
           <div style={{
-            border: '2px dashed rgba(196,134,42,0.55)', borderRadius: 10,
+            border: '2px dashed rgba(183,255,0,0.55)', borderRadius: 10,
             padding: '20px 40px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>🎵</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#C4862A', letterSpacing: '0.08em',
-              textShadow: '0 0 10px rgba(196,134,42,0.4)' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#B7FF00', letterSpacing: '0.08em',
+              textShadow: '0 0 10px rgba(183,255,0,0.5)' }}>
               DROP AUDIO FILE
             </div>
-            <div style={{ fontSize: 10, color: '#6e6660', marginTop: 4 }}>MP3 · WAV · FLAC · OGG · AAC</div>
+            <div style={{ fontSize: 10, color: '#606060', marginTop: 4 }}>MP3 · WAV · FLAC · OGG · AAC</div>
           </div>
         </div>
       )}
@@ -170,8 +170,8 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
         padding: '8px 14px',
-        background: 'linear-gradient(180deg,#1c1916 0%,#111008 100%)',
-        borderBottom: '1px solid #2c2825',
+        background: '#141414',
+        borderBottom: '1px solid #242424',
         boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.4)',
       }}>
 
@@ -196,7 +196,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
                   display: 'flex', alignItems: 'center', gap: 3,
                   padding: '4px 9px', borderRadius: 4,
                   fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
-                  ...metalBtn(on),
+                  ...r3Btn(on),
                 }}
               >
                 <span style={{ fontSize: 10 }}>{icon}</span>
@@ -212,8 +212,8 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
                 padding: '4px 8px', borderRadius: 4,
                 fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
                 maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                ...metalBtn(false),
-                color: '#8a7a6a',
+                ...r3Btn(false),
+                color: '#909090',
               }}
             >
               {fileName.length > 13 ? `${fileName.slice(0, 11)}…` : fileName}
@@ -222,7 +222,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3a3a3a,transparent)', flexShrink: 0 }} />
 
         {/* ── Play / Stop ── */}
         <button
@@ -233,18 +233,18 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
             ...(isPlaying
               ? {
-                  background: 'linear-gradient(180deg,#2a0a0a 0%,#1e0808 100%)',
+                  background: 'rgba(239,68,68,0.08)',
                   border: '1px solid #ef444455',
                   borderTop: '1px solid #ef444440',
                   color: '#ef8888',
                   boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7), 0 0 7px rgba(239,68,68,0.15)',
                 }
               : {
-                  background: 'linear-gradient(180deg,#2e2610 0%,#1e1a0a 50%,#252010 100%)',
-                  border: '1px solid rgba(196,134,42,0.55)',
-                  borderTop: '1px solid rgba(196,134,42,0.40)',
-                  color: '#C4862A',
-                  boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.08), 0 0 8px rgba(196,134,42,0.20)',
+                  background: 'rgba(183,255,0,0.08)',
+                  border: '1px solid rgba(183,255,0,0.55)',
+                  borderTop: '1px solid rgba(183,255,0,0.40)',
+                  color: '#B7FF00',
+                  boxShadow: 'inset 0 1px 0 rgba(183,255,0,0.06), 0 0 8px rgba(183,255,0,0.15)',
                 }),
             cursor: 'pointer', transition: 'all 150ms',
           }}
@@ -254,11 +254,11 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         </button>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3a3a3a,transparent)', flexShrink: 0 }} />
 
         {/* ── A/B comparison ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ fontSize: 9, color: '#6e6660', letterSpacing: '0.07em' }}>A/B</span>
+          <span style={{ fontSize: 9, color: '#606060', letterSpacing: '0.07em' }}>A/B</span>
           {(['A', 'B'] as const).map(slot => (
             <button
               key={slot}
@@ -267,19 +267,19 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
               style={{
                 width: 28, height: 24, borderRadius: 3,
                 fontSize: 10, fontWeight: 800,
-                ...metalBtn(slot === activeSlot),
+                ...r3Btn(slot === activeSlot),
               }}
             >{slot}</button>
           ))}
           <button
             onClick={onToggleAB}
             title="Swap A ↔ B"
-            style={{ width: 28, height: 24, borderRadius: 3, fontSize: 12, ...metalBtn(false) }}
+            style={{ width: 28, height: 24, borderRadius: 3, fontSize: 12, ...r3Btn(false) }}
           >⇄</button>
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3a3a3a,transparent)', flexShrink: 0 }} />
 
         {/* ── Bypass ── */}
         <button
@@ -289,12 +289,12 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
             ...(bypass
               ? {
-                  background: 'linear-gradient(180deg,#2a0808 0%,#1e0606 100%)',
+                  background: 'rgba(239,68,68,0.08)',
                   border: '1px solid #ef444455',
                   color: '#ef8888',
                   boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7)',
                 }
-              : { ...metalBtn(false), color: '#524c47' }),
+              : { ...r3Btn(false), color: '#484848' }),
             cursor: 'pointer', transition: 'all 150ms',
           }}
         >{bypass ? 'BYPASSED' : 'BYPASS'}</button>
@@ -312,14 +312,14 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
               width: 28, height: 26, borderRadius: 4,
               cursor: b.dis ? 'not-allowed' : 'pointer',
               fontSize: 13, opacity: b.dis ? 0.35 : 1,
-              ...metalBtn(false),
-              color: '#8a8078',
+              ...r3Btn(false),
+              color: '#707070',
             }}>{b.icon}</button>
           ))}
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3c3733,transparent)', flexShrink: 0 }} />
+        <div style={{ width: 1, height: 18, background: 'linear-gradient(to bottom,transparent,#3a3a3a,transparent)', flexShrink: 0 }} />
 
         {/* ── Presets + Help ── */}
         <button
@@ -328,14 +328,14 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             display: 'flex', alignItems: 'center', gap: 4,
             padding: '4px 10px', borderRadius: 4,
             fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
-            ...metalBtn(false), color: '#8a8078',
+            ...r3Btn(false), color: '#707070',
           }}
         >🎛 PRESETS</button>
 
         <button
           onClick={onShowHelp}
           title="Keyboard shortcuts (?)"
-          style={{ width: 28, height: 26, borderRadius: 4, fontSize: 12, ...metalBtn(false), color: '#8a8078' }}
+          style={{ width: 28, height: 26, borderRadius: 4, fontSize: 12, ...r3Btn(false), color: '#707070' }}
         >?</button>
       </div>
 
@@ -358,26 +358,26 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '5px 14px',
-          background: 'linear-gradient(180deg,#0f0d0a 0%,#0a0908 100%)',
-          borderBottom: '1px solid #252220',
+          background: '#0d0d0d',
+          borderBottom: '1px solid #1e1e1e',
         }}>
-          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#6e6660', minWidth: 30, textAlign: 'right' }}>
+          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#606060', minWidth: 30, textAlign: 'right' }}>
             {fmtTime(fileCurrentTime)}
           </span>
           <input
             type="range" min={0} max={fileDuration} step={0.1}
             value={fileCurrentTime}
             onChange={e => onSeek(parseFloat(e.target.value))}
-            style={{ flex: 1, height: 3, cursor: 'pointer', accentColor: '#C4862A' }}
+            style={{ flex: 1, height: 3, cursor: 'pointer', accentColor: '#B7FF00' }}
           />
-          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#3c3733', minWidth: 30 }}>
+          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#3a3a3a', minWidth: 30 }}>
             {fmtTime(fileDuration)}
           </span>
         </div>
       )}
 
       {/* ── Frequency axis ────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', background: '#0f0d0a' }}>
+      <div style={{ display: 'flex', background: '#0d0d0d' }}>
         <div style={{ width: 34, flexShrink: 0 }} />
         <div style={{ flex: 1, position: 'relative', height: 16 }}>
           {FREQ_TICKS.map(f => {
@@ -385,7 +385,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             return (
               <span key={f} style={{
                 position: 'absolute', left: `${pct}%`,
-                fontSize: 8, color: '#524c47',
+                fontSize: 8, color: '#3a3a3a',
                 transform: 'translateX(-50%)',
                 letterSpacing: '0.04em', lineHeight: '16px',
               }}>{fmtFreq(f)}</span>
@@ -395,7 +395,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
       </div>
 
       {/* ── EQ canvas + dB rail ───────────────────────────────────────── */}
-      <div style={{ display: 'flex', background: '#0a0908' }}>
+      <div style={{ display: 'flex', background: '#080808' }}>
         <div style={{
           width: 34, flexShrink: 0,
           display: 'flex', flexDirection: 'column', justifyContent: 'space-around',
@@ -404,13 +404,13 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
           {DB_LABELS.map(db => (
             <span key={db} style={{
               fontSize: 8,
-              color: db === 0 ? '#6e6660' : '#3c3733',
+              color: db === 0 ? '#505050' : '#2e2e2e',
               textAlign: 'right', paddingRight: 5, fontFamily: 'monospace',
             }}>{db > 0 ? `+${db}` : db}</span>
           ))}
         </div>
         <div style={{ flex: 1, minWidth: 0, height: 224 }}>
-          <FruityEQCanvas
+          <R3EQCanvas
             curve={curve}
             bands={state.bands}
             selectedBand={selectedBand}
@@ -425,9 +425,9 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
       {/* ── Vertical faders ───────────────────────────────────────────── */}
       <div style={{
         display: 'flex',
-        background: 'linear-gradient(180deg,#141210 0%,#0f0d0a 100%)',
-        borderTop: '1px solid #2c2825',
-        borderBottom: '1px solid #2c2825',
+        background: '#111111',
+        borderTop: '1px solid #242424',
+        borderBottom: '1px solid #242424',
       }}>
         {state.bands.map((band, idx) => (
           <VerticalFader
@@ -465,7 +465,7 @@ interface FaderProps {
 }
 
 function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggleEnable }: FaderProps) {
-  const color  = BAND_COLORS[band.id] ?? '#C4862A';
+  const color  = BAND_COLORS[band.id] ?? '#B7FF00';
   const noGain = band.type === FilterType.HighPass || band.type === FilterType.LowPass;
 
   return (
@@ -475,9 +475,9 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         flex: 1, minWidth: 0,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         padding: '10px 2px 10px',
-        borderRight: isLast ? 'none' : '1px solid #252220',
+        borderRight: isLast ? 'none' : '1px solid #1e1e1e',
         background: selected
-          ? 'linear-gradient(180deg,rgba(196,134,42,0.05) 0%,transparent 100%)'
+          ? 'rgba(183,255,0,0.04)'
           : 'transparent',
         cursor: 'pointer',
         transition: 'background 150ms',
@@ -489,15 +489,15 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
           width: 18, height: 18, borderRadius: '50%',
           background: band.enabled
             ? `radial-gradient(circle at 35% 35%, ${color}cc, ${color}66)`
-            : '#252220',
-          border: `1px solid ${band.enabled ? color + '70' : '#3c3733'}`,
+            : '#1e1e1e',
+          border: `1px solid ${band.enabled ? color + '70' : '#2e2e2e'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 9, fontWeight: 800,
-          color: band.enabled ? '#0a0908' : '#524c47',
-          boxShadow: band.enabled ? `0 0 4px ${color}30` : 'none',
+          color: band.enabled ? '#080808' : '#484848',
+          boxShadow: band.enabled ? `0 0 6px ${color}40` : 'none',
           transition: 'all 200ms',
         }}>{band.id + 1}</div>
-        <span style={{ fontSize: 7, color: '#524c47', letterSpacing: '0.06em', fontWeight: 700 }}>
+        <span style={{ fontSize: 7, color: '#3a3a3a', letterSpacing: '0.06em', fontWeight: 700 }}>
           {TYPE_SHORT[band.type]}
         </span>
       </div>
@@ -514,7 +514,7 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         <div style={{
           position: 'absolute', top: '50%', left: '10%',
           width: '80%', height: 1,
-          background: 'rgba(255,235,200,0.06)',
+          background: 'rgba(255,255,255,0.04)',
           pointerEvents: 'none',
         }} />
         <input
@@ -535,10 +535,10 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
 
       <span style={{
         fontSize: 8, fontFamily: 'monospace', marginTop: 2,
-        color: noGain ? '#3c3733'
+        color: noGain ? '#2e2e2e'
           : band.gain > 0.1 ? color
-          : band.gain < -0.1 ? '#C45A3A'
-          : '#524c47',
+          : band.gain < -0.1 ? '#ef6666'
+          : '#484848',
         minWidth: 38, textAlign: 'center',
         transition: 'color 150ms',
       }}>
@@ -547,7 +547,7 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
 
       <span style={{
         fontSize: 8,
-        color: selected ? '#C4862A' : '#3c3733',
+        color: selected ? '#B7FF00' : '#2e2e2e',
         marginTop: 2, letterSpacing: '0.03em',
         transition: 'color 150ms',
       }}>
@@ -559,12 +559,12 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         title={band.enabled ? 'Disable band' : 'Enable band'}
         style={{
           marginTop: 7, width: 24, height: 8, borderRadius: 4,
-          border: `1px solid ${band.enabled ? color + '60' : '#3c3733'}`,
+          border: `1px solid ${band.enabled ? color + '60' : '#2e2e2e'}`,
           cursor: 'pointer',
           background: band.enabled
             ? `linear-gradient(to right, ${color}aa, ${color}66)`
-            : 'linear-gradient(180deg,#2c2825 0%,#1e1b18 100%)',
-          boxShadow: band.enabled ? `0 0 5px ${color}30` : 'none',
+            : '#1a1a1a',
+          boxShadow: band.enabled ? `0 0 6px ${color}30` : 'none',
           transition: 'all 200ms',
         }}
       />

@@ -74,8 +74,8 @@ export function App() {
 
       {/* ── Masthead ──────────────────────────────────────────────────────── */}
       <div style={{
-        background: 'linear-gradient(180deg,#1a1714 0%,#111008 100%)',
-        borderBottom: '1px solid #2c2825',
+        background: '#111111',
+        borderBottom: '1px solid #242424',
         boxShadow: '0 2px 12px rgba(0,0,0,0.6)',
       }}>
         <div style={{
@@ -83,78 +83,75 @@ export function App() {
           padding: '10px 24px 10px',
           display: 'flex', alignItems: 'center', gap: 14,
         }}>
-          {/* R3 NATIVE badge — spec §2.1: 50px with glow-pulse */}
+          {/* R3 NATIVE badge */}
           <div style={{
             width: 50, height: 50, borderRadius: '50%', flexShrink: 0,
-            background: 'radial-gradient(circle at 32% 32%, #3a2e1e 0%, #1a1410 50%, #0f0d0a 100%)',
-            border: '2px solid rgba(196,134,42,0.55)',
+            background: 'radial-gradient(circle at 32% 32%, #1a2800 0%, #0d1400 50%, #080808 100%)',
+            border: '2px solid rgba(183,255,0,0.55)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'amberPulse 3s ease-in-out infinite',
+            animation: 'greenPulse 3s ease-in-out infinite',
             position: 'relative',
           }}>
-            {/* Concentric inner ring — spec §1.1 */}
+            {/* Concentric inner ring */}
             <div style={{
               position: 'absolute', inset: 4, borderRadius: '50%',
-              border: '1px solid rgba(196,134,42,0.20)',
+              border: '1px solid rgba(183,255,0,0.18)',
               pointerEvents: 'none',
             }} />
             <span style={{
-              fontSize: 15, fontWeight: 900, color: '#C4862A',
+              fontSize: 15, fontWeight: 900, color: '#B7FF00',
               letterSpacing: '0.02em',
               fontFamily: 'Bebas Neue, Montserrat, sans-serif',
-              textShadow: '0 0 10px rgba(196,134,42,0.6)',
+              textShadow: '0 0 10px rgba(183,255,0,0.7)',
               lineHeight: 1,
             }}>R3</span>
           </div>
 
-          {/* Title block — spec §2.1 brand-text with underline + attribution */}
+          {/* Title block */}
           <div style={{ animation: 'fadeInDown 0.6s ease-out' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              {/* Brand text + amber underline — spec §2.1 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <div style={{
                   fontSize: 20, lineHeight: 1,
                   fontFamily: 'Bebas Neue, Montserrat, sans-serif',
-                  color: '#C4862A',
+                  color: '#B7FF00',
                   letterSpacing: '0.08em',
-                  textShadow: '0 0 18px rgba(196,134,42,0.28), 0 1px 2px rgba(0,0,0,0.7)',
+                  textShadow: '0 0 18px rgba(183,255,0,0.30), 0 1px 2px rgba(0,0,0,0.7)',
                 }}>
                   EQ MASTERCLASS
                 </div>
-                {/* Amber underline — spec §2.1 "2px solid accent" */}
+                {/* Neon green underline */}
                 <div style={{
                   height: 2,
-                  background: 'linear-gradient(to right, rgba(196,134,42,0.8), rgba(196,134,42,0.2), transparent)',
+                  background: 'linear-gradient(to right, rgba(183,255,0,0.8), rgba(183,255,0,0.2), transparent)',
                   borderRadius: 1,
                 }} />
               </div>
-              <div style={{ fontSize: 10, color: '#6e6660', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 4 }}>
+              <div style={{ fontSize: 10, color: '#505050', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 4 }}>
                 R3 V4
               </div>
             </div>
-            {/* Author attribution — spec §2.1 */}
             <div style={{
-              fontSize: 10, color: '#7a6e62', fontStyle: 'italic',
+              fontSize: 10, color: '#606060', fontStyle: 'italic',
               letterSpacing: '0.06em', marginTop: 2,
             }}>
               by DJ Ernesto
             </div>
           </div>
 
-          {/* Forge line */}
+          {/* Divider line */}
           <div style={{
             flex: 1, height: 1,
-            background: 'linear-gradient(to right, rgba(196,134,42,0.20), transparent)',
+            background: 'linear-gradient(to right, rgba(183,255,0,0.15), transparent)',
           }} />
 
           {/* Slot pill */}
           <div style={{
             padding: '3px 10px', borderRadius: 3,
-            border: '1px solid rgba(196,134,42,0.25)',
-            background: 'linear-gradient(180deg,#2c2420 0%,#1a1410 100%)',
-            fontSize: 9, fontWeight: 800, color: '#C4862A90',
+            border: '1px solid rgba(183,255,0,0.22)',
+            background: '#141414',
+            fontSize: 9, fontWeight: 800, color: 'rgba(183,255,0,0.55)',
             letterSpacing: '0.14em', flexShrink: 0,
-            boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.06)',
           }}>
             SLOT {activeSlot}
           </div>
@@ -215,7 +212,7 @@ export function App() {
 
         <ToolsPanel onApply={handleOperation} />
 
-        {/* ── Footer — spec §2.5 ───────────────────────────────────────── */}
+        {/* ── Footer ───────────────────────────────────────────────────── */}
         <div style={{
           marginTop: 72,
           borderTop: '1px solid #242424',
@@ -224,36 +221,34 @@ export function App() {
           textAlign: 'center',
           position: 'relative',
         }}>
-          {/* Decorative amber gradient lines — spec §2.5 "140px, transparent→amber→transparent" */}
+          {/* Decorative neon lines */}
           <div style={{
             position: 'absolute', top: '50%', left: 0,
             transform: 'translateY(-50%)',
             width: 140, height: 2, borderRadius: 1,
-            background: 'linear-gradient(to right, transparent, rgba(196,134,42,0.55), transparent)',
-            animation: 'forgeShimmer 3s ease-in-out infinite',
+            background: 'linear-gradient(to right, transparent, rgba(183,255,0,0.40), transparent)',
+            animation: 'greenShimmer 3s ease-in-out infinite',
           }} />
           <div style={{
             position: 'absolute', top: '50%', right: 0,
             transform: 'translateY(-50%)',
             width: 140, height: 2, borderRadius: 1,
-            background: 'linear-gradient(to left, transparent, rgba(196,134,42,0.55), transparent)',
-            animation: 'forgeShimmer 3s ease-in-out infinite',
+            background: 'linear-gradient(to left, transparent, rgba(183,255,0,0.40), transparent)',
+            animation: 'greenShimmer 3s ease-in-out infinite',
           }} />
 
-          {/* Quote — spec §2.5: Montserrat 16px, weight 600, italic */}
           <div style={{
             fontSize: 16, fontStyle: 'italic', fontWeight: 600,
             fontFamily: 'Montserrat, sans-serif',
-            color: '#6e6660',
+            color: '#505050',
             letterSpacing: '0.06em',
             lineHeight: 1.6,
           }}>
-            {/* Amber quote marks — spec §2.5 */}
-            <span style={{ color: '#C4862A', fontSize: 22, opacity: 0.8, marginRight: 6, verticalAlign: 'middle' }}>"</span>
+            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.7, marginRight: 6, verticalAlign: 'middle' }}>"</span>
             LESS IS MORE. SPACE IS POWER.
-            <span style={{ color: '#C4862A', fontSize: 22, opacity: 0.8, marginLeft: 6, verticalAlign: 'middle' }}>"</span>
+            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.7, marginLeft: 6, verticalAlign: 'middle' }}>"</span>
           </div>
-          <div style={{ fontSize: 9, color: '#3c3733', marginTop: 10, letterSpacing: '0.16em', fontWeight: 700 }}>
+          <div style={{ fontSize: 9, color: '#2e2e2e', marginTop: 10, letterSpacing: '0.16em', fontWeight: 700 }}>
             R3 NATIVE · EQ MASTERCLASS · BY DJ ERNESTO
           </div>
         </div>
@@ -270,20 +265,20 @@ export function App() {
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '36px 0 14px' }}>
-      {/* Spec §2.4 left-border accent — amber, tapered */}
+      {/* Neon green left-border accent */}
       <div style={{
         width: 4, height: 18, flexShrink: 0, borderRadius: 2,
-        background: 'linear-gradient(180deg, rgba(196,134,42,0.9), rgba(196,134,42,0.25))',
+        background: 'linear-gradient(180deg, rgba(183,255,0,0.9), rgba(183,255,0,0.25))',
       }} />
       <span style={{
-        fontSize: 11, fontWeight: 800, color: '#7a7068',
+        fontSize: 11, fontWeight: 800, color: '#505050',
         letterSpacing: '0.24em', whiteSpace: 'nowrap',
         fontFamily: 'Bebas Neue, Montserrat, sans-serif',
         textTransform: 'uppercase',
       }}>{children}</span>
       <div style={{
         flex: 1, height: 1,
-        background: 'linear-gradient(to right, rgba(196,134,42,0.18), transparent)',
+        background: 'linear-gradient(to right, rgba(183,255,0,0.15), transparent)',
       }} />
     </div>
   );
@@ -304,28 +299,26 @@ function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./d
         aria-expanded={open}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 0,
-          background: open
-            ? 'linear-gradient(180deg,#2a2520 0%,#1e1b16 100%)'
-            : 'linear-gradient(180deg,#3a3530 0%,#252220 55%,#2e2825 100%)',
-          border: '1px solid #4a4440',
-          borderTop: `1px solid ${open ? 'rgba(196,134,42,0.45)' : '#5a5450'}`,
-          borderBottom: open ? '1px solid #2c2825' : '1px solid #1a1612',
+          background: open ? '#161616' : '#1a1a1a',
+          border: '1px solid #2e2e2e',
+          borderTop: `1px solid ${open ? 'rgba(183,255,0,0.35)' : '#3a3a3a'}`,
+          borderBottom: open ? '1px solid #1e1e1e' : '1px solid #111111',
           borderRadius: open ? '6px 6px 0 0' : '6px',
           cursor: 'pointer',
           boxShadow: open
-            ? 'inset 0 1px 0 rgba(255,235,200,0.06)'
-            : 'inset 0 1px 0 rgba(255,235,200,0.07), inset 0 -1px 0 rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.5)',
+            ? 'none'
+            : 'inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -1px 0 rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.5)',
           transition: 'all 180ms',
           overflow: 'hidden',
           userSelect: 'none',
         }}
       >
-        {/* Left amber accent strip */}
+        {/* Left neon accent strip */}
         <div style={{
           width: 3, alignSelf: 'stretch', flexShrink: 0,
           background: open
-            ? 'linear-gradient(180deg, rgba(196,134,42,0.7), rgba(196,134,42,0.3))'
-            : 'rgba(196,134,42,0.2)',
+            ? 'linear-gradient(180deg, rgba(183,255,0,0.7), rgba(183,255,0,0.2))'
+            : 'rgba(183,255,0,0.15)',
           transition: 'background 180ms',
         }} />
 
@@ -341,10 +334,10 @@ function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./d
                   fontSize: 9, fontWeight: 800, letterSpacing: '0.12em',
                   cursor: 'pointer',
                   background: (open && activeTab === tab)
-                    ? 'linear-gradient(180deg,#1a1408 0%,#241c0a 100%)'
+                    ? 'rgba(183,255,0,0.08)'
                     : 'transparent',
-                  border: `1px solid ${(open && activeTab === tab) ? 'rgba(196,134,42,0.5)' : 'transparent'}`,
-                  color: (open && activeTab === tab) ? '#C4862A' : '#6e6660',
+                  border: `1px solid ${(open && activeTab === tab) ? 'rgba(183,255,0,0.40)' : 'transparent'}`,
+                  color: (open && activeTab === tab) ? '#B7FF00' : '#606060',
                   boxShadow: (open && activeTab === tab) ? 'inset 0 1px 3px rgba(0,0,0,0.5)' : 'none',
                   transition: 'all 150ms',
                 }}
@@ -357,7 +350,7 @@ function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./d
           {/* Spacer + chevron */}
           <div style={{ flex: 1 }} />
           <span style={{
-            fontSize: 10, color: open ? '#C4862A' : '#524c47',
+            fontSize: 10, color: open ? '#B7FF00' : '#3a3a3a',
             transform: open ? 'rotate(180deg)' : 'rotate(0)',
             display: 'inline-block', transition: 'all 200ms',
           }}>▾</span>
@@ -367,12 +360,11 @@ function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./d
       {/* ── Collapsible body ── */}
       {open && (
         <div style={{
-          border: '1px solid #4a4440',
+          border: '1px solid #2e2e2e',
           borderTop: 'none',
           borderRadius: '0 0 6px 6px',
-          background: 'linear-gradient(180deg,#181510 0%,#111008 100%)',
+          background: '#111111',
           padding: '16px 16px 18px',
-          boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.3)',
         }}>
           {activeTab === 'ops' && <OperationsGrid onApply={onApply} />}
           {activeTab === 'tips' && <ProTipsAccordion />}
@@ -417,17 +409,16 @@ function ProTipsAccordion() {
 
   return (
     <div style={{
-      border: '1px solid #2c2825',
-      borderLeft: '4px solid rgba(196,134,42,0.55)',  /* spec §2.4 left-border accent */
+      border: '1px solid #2a2a2a',
+      borderLeft: '3px solid rgba(183,255,0,0.45)',
       borderRadius: 8,
       overflow: 'hidden',
-      background: 'linear-gradient(180deg,#141210 0%,#0f0d0a 100%)',
-      boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.04)',
+      background: '#141414',
     }}>
       {PRO_TIPS.map((tip, idx) => {
         const open = openIdx === idx;
         return (
-          <div key={idx} style={{ borderBottom: idx < PRO_TIPS.length - 1 ? '1px solid #252220' : 'none' }}>
+          <div key={idx} style={{ borderBottom: idx < PRO_TIPS.length - 1 ? '1px solid #1e1e1e' : 'none' }}>
             <button
               onClick={() => setOpenIdx(open ? null : idx)}
               style={{
@@ -436,30 +427,30 @@ function ProTipsAccordion() {
                 cursor: 'pointer', textAlign: 'left',
               }}
             >
-              {/* Number rivet */}
+              {/* Number badge */}
               <span style={{
                 width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
                 background: open
-                  ? 'radial-gradient(circle at 35% 35%, #C4862Acc, #C4862A66)'
-                  : 'linear-gradient(180deg,#3a3530 0%,#252220 100%)',
-                border: `1px solid ${open ? 'rgba(196,134,42,0.55)' : '#4a4440'}`,
+                  ? 'radial-gradient(circle at 35% 35%, #d4ff40cc, #B7FF0066)'
+                  : '#242424',
+                border: `1px solid ${open ? 'rgba(183,255,0,0.55)' : '#3a3a3a'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 9, fontWeight: 800,
-                color: open ? '#0a0908' : '#6e6660',
-                boxShadow: open ? '0 0 6px rgba(196,134,42,0.3)' : 'inset 0 1px 0 rgba(255,235,200,0.06)',
+                color: open ? '#080808' : '#606060',
+                boxShadow: open ? '0 0 8px rgba(183,255,0,0.30)' : 'none',
                 transition: 'all 200ms',
               }}>{idx + 1}</span>
 
               <span style={{
                 fontSize: 12, fontWeight: 700,
-                color: open ? '#D8D0C4' : '#a09080',
+                color: open ? '#E6E6E6' : '#909090',
                 letterSpacing: '0.04em',
                 transition: 'color 200ms',
               }}>{tip.title}</span>
 
               <span style={{
                 marginLeft: 'auto', fontSize: 11,
-                color: open ? '#C4862A' : '#524c47',
+                color: open ? '#B7FF00' : '#3a3a3a',
                 transition: 'all 200ms',
                 transform: open ? 'rotate(180deg)' : 'rotate(0)',
                 display: 'inline-block',
@@ -468,23 +459,22 @@ function ProTipsAccordion() {
 
             {open && (
               <div style={{
-                borderTop: '1px solid #252220',
+                borderTop: '1px solid #1e1e1e',
                 padding: '12px 16px 14px 48px',
               }}>
                 <p style={{
                   fontSize: 12, lineHeight: 1.65,
-                  color: '#8a8078',
+                  color: '#808080',
                   marginBottom: 10,
                 }}>{tip.content}</p>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 9, color: '#524c47', letterSpacing: '0.06em' }}>Related:</span>
+                  <span style={{ fontSize: 9, color: '#484848', letterSpacing: '0.06em' }}>Related:</span>
                   {tip.related.map(tag => (
                     <span key={tag} style={{
                       fontSize: 9, padding: '2px 7px', borderRadius: 3,
-                      background: 'linear-gradient(180deg,#2c2825 0%,#1e1b18 100%)',
-                      border: '1px solid #3c3733',
-                      color: '#6e6660', letterSpacing: '0.04em',
-                      boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.05)',
+                      background: '#1a1a1a',
+                      border: '1px solid #2e2e2e',
+                      color: '#606060', letterSpacing: '0.04em',
                     }}>{tag}</span>
                   ))}
                 </div>
@@ -515,7 +505,7 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(0,0,0,0.82)',
+        background: 'rgba(0,0,0,0.85)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         backdropFilter: 'blur(4px)',
       }}
@@ -523,21 +513,21 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: 'linear-gradient(180deg,#1c1916 0%,#141210 100%)',
-          border: '1px solid #3c3733',
-          borderTop: '2px solid rgba(196,134,42,0.4)',
+          background: '#141414',
+          border: '1px solid #2e2e2e',
+          borderTop: '2px solid rgba(183,255,0,0.45)',
           borderRadius: 10,
           padding: '24px 28px',
           minWidth: 320, maxWidth: 400,
-          boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 20px rgba(196,134,42,0.08)',
+          boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 20px rgba(183,255,0,0.06)',
         }}
       >
         <div style={{
-          fontSize: 20, fontWeight: 800, color: '#C4862A',
+          fontSize: 20, fontWeight: 800, color: '#B7FF00',
           letterSpacing: '0.14em',
           fontFamily: 'Bebas Neue, Montserrat, sans-serif',
           marginBottom: 16,
-          textShadow: '0 0 12px rgba(196,134,42,0.3)',
+          textShadow: '0 0 12px rgba(183,255,0,0.3)',
         }}>KEYBOARD SHORTCUTS</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -545,18 +535,17 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
             <div key={s.desc} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '4px 0',
-              borderBottom: '1px solid #252220',
+              borderBottom: '1px solid #1e1e1e',
             }}>
-              <span style={{ fontSize: 12, color: '#8a8078' }}>{s.desc}</span>
+              <span style={{ fontSize: 12, color: '#808080' }}>{s.desc}</span>
               <div style={{ display: 'flex', gap: 4 }}>
                 {s.keys.map(k => (
                   <kbd key={k} style={{
                     fontSize: 10, padding: '2px 6px', borderRadius: 3,
-                    background: 'linear-gradient(180deg,#3a3530 0%,#252220 100%)',
-                    border: '1px solid #4a4440',
-                    borderBottom: '2px solid #1a1612',
-                    color: '#C4862A', fontFamily: 'monospace',
-                    boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.07)',
+                    background: '#1e1e1e',
+                    border: '1px solid #3a3a3a',
+                    borderBottom: '2px solid #111111',
+                    color: '#B7FF00', fontFamily: 'monospace',
                   }}>{k}</kbd>
                 ))}
               </div>
@@ -569,11 +558,11 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
           style={{
             marginTop: 20, width: '100%',
             padding: '8px', borderRadius: 5,
-            background: 'linear-gradient(180deg,#2e2610 0%,#1e1a0a 50%,#252010 100%)',
-            border: '1px solid rgba(196,134,42,0.45)',
-            color: '#C4862A', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
+            background: 'rgba(183,255,0,0.08)',
+            border: '1px solid rgba(183,255,0,0.40)',
+            color: '#B7FF00', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
             cursor: 'pointer',
-            boxShadow: 'inset 0 1px 0 rgba(255,235,200,0.08), 0 0 8px rgba(196,134,42,0.12)',
+            boxShadow: '0 0 8px rgba(183,255,0,0.10)',
           }}
         >CLOSE</button>
       </div>
