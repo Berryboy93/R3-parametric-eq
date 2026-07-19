@@ -1,50 +1,93 @@
-/* R3 NATIVE — base resets and global styles */
+/* ─────────────────────────────────────────────────────────────
+   R3 NATIVE — Official Brand Design System
+   Midnight Black + Neon Green
+───────────────────────────────────────────────────────────── */
+
+:root {
+  /* PRIMARY */
+  --r3-green:       #B7FF00;
+  --r3-black:       #080808;
+  --r3-silver:      #E6E6E6;
+  --r3-graphite:    #242424;
+  --r3-white:       #FFFFFF;
+
+  /* DERIVED */
+  --bg-primary:     #080808;
+  --bg-secondary:   #0F1219;
+  --bg-tertiary:    #1A2535;
+  --accent-light:   #D4FF33;
+  --accent-dim:     #99CC00;
+  --border-subtle:  #1c1c1c;
+  --border-mid:     #242424;
+  --border-light:   #383838;
+  --text-primary:   #FFFFFF;
+  --text-secondary: #E6E6E6;
+  --text-muted:     #666666;
+  --text-dim:       #3a3a3a;
+
+  /* STATES */
+  --state-hover:    rgba(183, 255, 0, 0.10);
+  --state-active:   rgba(183, 255, 0, 0.20);
+  --glow-neon:      0 0 16px rgba(183, 255, 0, 0.40);
+  --glow-bright:    0 0 24px rgba(183, 255, 0, 0.60);
+  --glow-soft:      0 0 8px  rgba(183, 255, 0, 0.25);
+
+  /* TYPOGRAPHY */
+  --font-display:   'Bebas Neue', 'Montserrat', sans-serif;
+  --font-body:      'Montserrat', system-ui, sans-serif;
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body, #root {
-  height: 100%;
+html { scroll-behavior: smooth; }
+
+body, #root {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
   overflow-x: hidden;
 }
 
-body {
-  background: #09090f;
-  color: #c0c4dc;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--r3-graphite); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
-/* Native range input — cross-browser slim track */
+/* ── Range inputs ──────────────────────────────────────── */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
-  cursor: ew-resize;
 }
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 2px;
-  background: #2a2a3e;
-  border-radius: 1px;
+  height: 2px; background: var(--border-mid); border-radius: 1px;
 }
 input[type="range"]::-moz-range-track {
-  height: 2px;
-  background: #2a2a3e;
-  border-radius: 1px;
+  height: 2px; background: var(--border-mid); border-radius: 1px;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  margin-top: -4px;
-  background: currentColor;
-  border: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--r3-green);
+  margin-top: -5px; cursor: pointer;
+  box-shadow: var(--glow-soft);
 }
 input[type="range"]::-moz-range-thumb {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: currentColor;
-  border: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--r3-green); border: none;
+  cursor: pointer; box-shadow: var(--glow-soft);
 }
 
-button { font-family: inherit; }
-select { font-family: inherit; outline: none; }
+/* ── Button reset ──────────────────────────────────────── */
+button { font-family: var(--font-body); cursor: pointer; }
+select { font-family: var(--font-body); outline: none; }
+
+/* ── Focus visible ─────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--r3-green);
+  outline-offset: 2px;
+}
