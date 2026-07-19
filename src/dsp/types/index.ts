@@ -142,6 +142,7 @@ export interface EQPreset {
   readonly description: string;
   readonly state: EQState;
   readonly tags: readonly string[];
+  readonly isFactory: boolean;
   readonly createdAt: number;
   readonly updatedAt: number;
 }

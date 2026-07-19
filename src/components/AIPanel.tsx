@@ -77,7 +77,7 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
         aria-expanded={open}
       >
         <span style={{ fontSize: 14 }}>🤖</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#B7FF00', letterSpacing: '0.12em', fontFamily: 'Bebas Neue, Montserrat, sans-serif', fontSize: 13 }}>AI ANALYSIS</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#B7FF00', letterSpacing: '0.12em', fontFamily: 'Bebas Neue, Montserrat, sans-serif' }}>AI ANALYSIS</span>
         {isPlaying && recs.length === 0 && (
           <span style={{ fontSize: 10, color: '#555', marginLeft: 4, fontStyle: 'italic' }}>listening…</span>
         )}
