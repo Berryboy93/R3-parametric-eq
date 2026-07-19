@@ -36,7 +36,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Remove low-end rumble & noise below the mix',
     detail: '80 Hz · 12 dB/oct',
     shape: 'hp',
-    color: '#B7FF00',
+    color: '#FF3B30', // band 0 — red
     bandId: 0,
     update: { enabled: true, type: FilterType.HighPass, frequency: 80, q: 0.7 },
   },
@@ -46,7 +46,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Eliminate boxiness and low-mid buildup',
     detail: '300 Hz · −5 dB',
     shape: 'peak-cut',
-    color: '#B7FF00',
+    color: '#FFD633', // band 2 — yellow
     bandId: 2,
     update: { enabled: true, type: FilterType.Peaking, frequency: 300, gain: -5, q: 1.2 },
   },
@@ -56,7 +56,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Add cut-through clarity and vocal intelligibility',
     detail: '3 kHz · +3 dB',
     shape: 'peak-boost',
-    color: '#B7FF00',
+    color: '#00FF90', // band 4 — mint
     bandId: 4,
     update: { enabled: true, type: FilterType.Peaking, frequency: 3000, gain: 3, q: 1.5 },
   },
@@ -66,7 +66,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Tame aggressive high-mid bite and sibilance',
     detail: '4 kHz · −3 dB',
     shape: 'peak-cut',
-    color: '#B7FF00',
+    color: '#00C8FF', // band 5 — cyan
     bandId: 5,
     update: { enabled: true, type: FilterType.Peaking, frequency: 4000, gain: -3, q: 2.0 },
   },
@@ -76,7 +76,7 @@ const OPERATIONS: Operation[] = [
     desc: 'Smooth out harsh high-frequency noise and hiss',
     detail: '16 kHz · 12 dB/oct',
     shape: 'lp',
-    color: '#B7FF00',
+    color: '#FF4DFF', // band 7 — magenta
     bandId: 7,
     update: { enabled: true, type: FilterType.LowPass, frequency: 16000, q: 0.7 },
   },
@@ -97,67 +97,68 @@ export function OperationsGrid({ onApply }: Props) {
 }
 
 function OperationButton({ op, onApply }: { op: Operation; onApply: () => void }) {
+  const col = op.color;
   return (
     <button
       onClick={onApply}
       title={`${op.desc} — ${op.detail}`}
       style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '6px 14px',
-        background: '#1a1a1a',
-        border: `1px solid #2e2e2e`,
-        borderTop: `1px solid #3a3a3a`,
-        borderBottom: `1px solid #111111`,
-        borderRadius: 5,
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '7px 14px 7px 10px',
+        background: '#161616',
+        border: `1px solid #2a2a2a`,
+        borderTop: `1px solid #333333`,
+        borderBottom: `1px solid #0e0e0e`,
+        borderRadius: 6,
         cursor: 'pointer',
         outline: 'none',
         userSelect: 'none',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.6)',
-        transition: 'box-shadow 80ms, filter 80ms, border-color 80ms',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -1px 0 rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.5)',
+        transition: 'all 120ms',
       }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLButtonElement;
-        el.style.filter = 'brightness(1.2)';
-        el.style.borderColor = 'rgba(183,255,0,0.50)';
+        el.style.background = '#1e1e1e';
+        el.style.borderColor = `${col}55`;
+        el.style.borderTopColor = `${col}40`;
+        el.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.04), 0 0 12px ${col}18`;
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLButtonElement;
-        el.style.filter = '';
-        el.style.borderColor = '#2e2e2e';
-        el.style.transform = 'scale(1)';
+        el.style.background = '#161616';
+        el.style.borderColor = '#2a2a2a';
+        el.style.borderTopColor = '#333333';
+        el.style.transform = '';
+        el.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -1px 0 rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.5)';
       }}
-      onMouseDown={e => {
-        const el = e.currentTarget as HTMLButtonElement;
-        el.style.transform = 'scale(0.97)';
-        el.style.boxShadow = 'inset 0 2px 5px rgba(0,0,0,0.7), 0 0 6px rgba(183,255,0,0.12)';
-      }}
-      onMouseUp={e => {
-        const el = e.currentTarget as HTMLButtonElement;
-        el.style.transform = 'scale(1)';
-        el.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.6)';
-      }}
+      onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
+      onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
     >
-      {/* Neon indicator dot */}
-      <span style={{
-        width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-        background: `radial-gradient(circle at 35% 35%, #d4ff40, #B7FF00)`,
-        boxShadow: `0 0 6px rgba(183,255,0,0.60)`,
-      }} />
-      {/* Label */}
-      <span style={{
-        fontSize: 11, fontWeight: 700, color: '#E6E6E6',
-        letterSpacing: '0.05em', whiteSpace: 'nowrap',
-        fontFamily: 'Montserrat, sans-serif',
-      }}>
-        {op.name}
-      </span>
-      {/* Detail */}
-      <span style={{
-        fontSize: 9, fontFamily: 'monospace',
-        color: '#B7FF00', opacity: 0.65, letterSpacing: '0.03em',
-      }}>
-        {op.detail}
-      </span>
+      {/* Mini EQ curve SVG */}
+      <svg
+        width={36} height={18} viewBox="0 0 32 14"
+        style={{ flexShrink: 0, overflow: 'visible' }}
+      >
+        {/* Midline */}
+        <line x1="0" y1="7" x2="32" y2="7" stroke="#2a2a2a" strokeWidth="0.8" />
+        {/* Curve — glow + stroke */}
+        <path d={MINI_PATHS[op.shape]} fill="none" stroke={col} strokeWidth="3.5" strokeOpacity="0.12" strokeLinecap="round" />
+        <path d={MINI_PATHS[op.shape]} fill="none" stroke={col} strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+
+      {/* Text block */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <span style={{
+          fontSize: 11, fontWeight: 700, color: '#D8D8D8',
+          letterSpacing: '0.04em', whiteSpace: 'nowrap',
+          lineHeight: 1,
+        }}>{op.name}</span>
+        <span style={{
+          fontSize: 9, color: col, opacity: 0.7,
+          letterSpacing: '0.03em', fontFamily: 'monospace',
+          lineHeight: 1,
+        }}>{op.detail}</span>
+      </div>
     </button>
   );
 }

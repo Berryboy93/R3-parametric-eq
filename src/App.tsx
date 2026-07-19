@@ -164,10 +164,14 @@ export function App() {
         {/* Preset browser overlay */}
         {showBrowser && (
           <PresetBrowser
-            presets={presets.presets}
+            factoryPresets={presets.factoryPresets}
+            userPresets={presets.userPresets}
+            currentState={state}
             onLoad={p => { setState(p.state); setShowBrowser(false); }}
-            onSave={name => { presets.save(name, state); setShowBrowser(false); }}
-            onDelete={id => presets.remove(id)}
+            onSave={(name, st, cat) => { presets.savePreset(name, st, cat); setShowBrowser(false); }}
+            onDelete={id => presets.deletePreset(id)}
+            onExport={id => presets.exportPreset(id)}
+            onImport={json => presets.importPreset(json)}
             onClose={() => setShowBrowser(false)}
           />
         )}

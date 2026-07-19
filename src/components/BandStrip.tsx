@@ -79,15 +79,16 @@ function BandCard({ band, selected, onSelect, onUpdate }: BandCardProps) {
       style={{
         flex: 1, minWidth: 0,
         background: selected
-          ? `rgba(183,255,0,0.05)`
+          ? `${color}0d`   /* 5% tint of the band's own color */
           : `#141414`,
-        border: `1px solid ${selected ? color + '70' : '#2a2a2a'}`,
+        border: `1px solid ${selected ? color + '80' : '#242424'}`,
+        borderTop: `1px solid ${selected ? color + '55' : '#2e2e2e'}`,
         borderRadius: 6,
         padding: '8px 8px 6px',
         cursor: 'pointer',
         display: 'flex', flexDirection: 'column', gap: 5,
         boxShadow: selected
-          ? `inset 0 1px 0 rgba(183,255,0,0.08), 0 0 10px rgba(183,255,0,0.08)`
+          ? `inset 0 1px 0 ${color}14, 0 0 12px ${color}12`
           : 'none',
         transition: 'all 150ms',
       }}

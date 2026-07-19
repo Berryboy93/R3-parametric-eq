@@ -554,20 +554,32 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         {fmtFreq(band.frequency)}
       </span>
 
+      {/* LED toggle pill */}
       <button
         onClick={e => { e.stopPropagation(); onToggleEnable(); }}
         title={band.enabled ? 'Disable band' : 'Enable band'}
         style={{
-          marginTop: 7, width: 24, height: 8, borderRadius: 4,
-          border: `1px solid ${band.enabled ? color + '60' : '#2e2e2e'}`,
-          cursor: 'pointer',
-          background: band.enabled
-            ? `linear-gradient(to right, ${color}aa, ${color}66)`
-            : '#1a1a1a',
-          boxShadow: band.enabled ? `0 0 6px ${color}30` : 'none',
+          marginTop: 7, width: 30, height: 14, borderRadius: 7,
+          border: `1px solid ${band.enabled ? color + '70' : '#2a2a2a'}`,
+          cursor: 'pointer', position: 'relative', flexShrink: 0,
+          background: band.enabled ? `${color}22` : '#111111',
+          boxShadow: band.enabled ? `0 0 8px ${color}28, inset 0 0 4px ${color}10` : 'inset 0 1px 3px rgba(0,0,0,0.6)',
           transition: 'all 200ms',
+          padding: 0,
         }}
-      />
+      >
+        <span style={{
+          position: 'absolute', top: 2,
+          left: band.enabled ? 'calc(100% - 12px)' : 2,
+          width: 8, height: 8, borderRadius: '50%',
+          background: band.enabled
+            ? `radial-gradient(circle at 35% 35%, ${color}ff, ${color}aa)`
+            : '#2a2a2a',
+          boxShadow: band.enabled ? `0 0 5px ${color}99` : 'none',
+          transition: 'left 180ms cubic-bezier(0.4,0,0.2,1), background 200ms',
+          display: 'block',
+        }} />
+      </button>
     </div>
   );
 }

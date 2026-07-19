@@ -12,11 +12,11 @@ const analyzer = new AIEQAnalyzer();
 const SAMPLE_RATE = 48000;
 const FFT_SIZE    = 4096;
 
-const ISSUE_META: Record<string, { label: string; icon: string; color: string }> = {
-  [FrequencyIssue.Mud]:       { label: 'Mud',       icon: '🟤', color: '#B7FF00' },
-  [FrequencyIssue.Harshness]: { label: 'Harshness', icon: '🔴', color: '#ef6666' },
-  [FrequencyIssue.Sibilance]: { label: 'Sibilance', icon: '🟡', color: '#d4ff40' },
-  [FrequencyIssue.Boominess]: { label: 'Boominess', icon: '🟠', color: '#B7FF00' },
+const ISSUE_META: Record<string, { label: string; dot: string; color: string }> = {
+  [FrequencyIssue.Mud]:       { label: 'Mud',       dot: '#FF8C1A', color: '#FF8C1A' },
+  [FrequencyIssue.Harshness]: { label: 'Harshness', dot: '#ef6666', color: '#ef6666' },
+  [FrequencyIssue.Sibilance]: { label: 'Sibilance', dot: '#FFD633', color: '#FFD633' },
+  [FrequencyIssue.Boominess]: { label: 'Boominess', dot: '#FF3B30', color: '#FF3B30' },
 };
 
 interface Props {
@@ -71,7 +71,11 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
         }}
         aria-expanded={open}
       >
-        <span style={{ fontSize: 13 }}>⚙️</span>
+        <span style={{
+          width: 8, height: 8, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
+          background: 'radial-gradient(circle at 35% 35%, #d4ff40, #B7FF00)',
+          boxShadow: '0 0 6px rgba(183,255,0,0.55)',
+        }} />
         <span style={{
           fontSize: 12, fontWeight: 800, color: '#B7FF00',
           letterSpacing: '0.14em', fontFamily: 'Bebas Neue, Montserrat, sans-serif',
@@ -104,7 +108,7 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recs.map(rec => {
-                const meta = ISSUE_META[rec.issue] ?? { label: rec.issue, icon: '⚪', color: '#B7FF00' };
+                const meta = ISSUE_META[rec.issue] ?? { label: rec.issue, dot: '#B7FF00', color: '#B7FF00' };
                 const pct  = Math.round(rec.confidence * 100);
                 const done = applied.has(rec.issue);
                 return (
@@ -117,7 +121,11 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
                     opacity: done ? 0.5 : 1,
                     transition: 'opacity 200ms',
                   }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>{meta.icon}</span>
+                    <span style={{
+                      width: 10, height: 10, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
+                      background: `radial-gradient(circle at 35% 35%, ${meta.dot}ff, ${meta.dot}88)`,
+                      boxShadow: `0 0 7px ${meta.dot}66`,
+                    }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: meta.color, letterSpacing: '0.05em' }}>
