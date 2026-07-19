@@ -1,13 +1,13 @@
 /**
- * FruityEQCanvas — Main EQ display styled after Fruity Parametric EQ 2
- * Rainbow-gradient curve, spectrum analyzer backdrop, numbered band nodes
+ * FruityEQCanvas — main EQ display styled after Fruity Parametric EQ 2
+ * Rainbow-gradient curve, spectrum analyzer backdrop, numbered band nodes.
+ * Accepts an optional `liveSpectrum` Float32Array from AnalyserNode for real-time display.
  */
 
 import { useRef, useEffect, useCallback, useMemo } from 'react';
 import type { FrequencyResponsePoint, EQBand } from '../dsp';
 import { FilterType } from '../dsp';
 
-// ── Band colours (matches the 5-band educational colour palette) ─────────────
 export const BAND_COLORS = [
   '#9B59B6', // 1 HP     — purple
   '#F39C12', // 2 cut    — amber
@@ -20,35 +20,33 @@ export const BAND_COLORS = [
 ];
 
 const FREQ_TICKS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
-const DB_TICKS   = [18, 12, 6, 0, -6, -12, -18];
-const DB_RANGE   = 18; // ± this many dB shown
+export const DB_TICKS = [18, 12, 6, 0, -6, -12, -18];
+export const DB_RANGE = 18;
 
-function freqToX(f: number, W: number) {
+export function freqToX(f: number, W: number) {
   return (Math.log10(f / 20) / Math.log10(20000 / 20)) * W;
 }
-function gainToY(g: number, H: number) {
+export function gainToY(g: number, H: number) {
   return H / 2 - (g / DB_RANGE) * (H / 2) * 0.9;
 }
-function fmtFreq(f: number) { return f >= 1000 ? `${f / 1000}k` : `${f}`; }
 
-// Generate a static, realistic-looking pink-noise spectrum
-function makeSpectrum(bins: number): number[] {
+// Static pink-noise-shaped spectrum used when no live audio
+function makeStaticSpectrum(bins: number): number[] {
   const s: number[] = [];
   let seed = 42;
   const rng = () => { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return (seed >>> 0) / 0xffffffff; };
   for (let i = 0; i < bins; i++) {
-    const t = i / bins;
+    const t    = i / bins;
     const freq = 20 * Math.pow(1000, t);
-    const pink = -10 * Math.log10(freq / 20) * 0.5;          // -3 dB/oct slope
-    const bump1 = 4 * Math.exp(-Math.pow((t - 0.32) / 0.06, 2)); // peak ~200Hz
-    const bump2 = 6 * Math.exp(-Math.pow((t - 0.52) / 0.05, 2)); // peak ~1kHz
+    const pink = -10 * Math.log10(freq / 20) * 0.5;
+    const bump1 = 4 * Math.exp(-Math.pow((t - 0.32) / 0.06, 2));
+    const bump2 = 6 * Math.exp(-Math.pow((t - 0.52) / 0.05, 2));
     const noise = (rng() - 0.5) * 10;
     s.push(Math.max(-DB_RANGE - 2, Math.min(DB_RANGE - 2, pink + bump1 + bump2 + noise)));
   }
   return s;
 }
 
-// ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
   curve: FrequencyResponsePoint[];
   bands: readonly EQBand[];
@@ -56,14 +54,17 @@ interface Props {
   onSelectBand: (id: number) => void;
   onBandDrag: (id: number, freq: number, gain: number) => void;
   bypass: boolean;
+  /** Live spectrum from AnalyserNode.getFloatFrequencyData() (dB, e.g. -120…0) */
+  liveSpectrum?: Float32Array | null;
 }
 
-export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDrag, bypass }: Props) {
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const dragging   = useRef<number | null>(null);
-  const spectrum   = useMemo(() => makeSpectrum(200), []);
+export function FruityEQCanvas({
+  curve, bands, selectedBand, onSelectBand, onBandDrag, bypass, liveSpectrum,
+}: Props) {
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const dragging     = useRef<number | null>(null);
+  const staticSpec   = useMemo(() => makeStaticSpectrum(200), []);
 
-  // ── Draw ──────────────────────────────────────────────────────────────────
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -75,50 +76,69 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
     canvas.height = H * devicePixelRatio;
     ctx.scale(devicePixelRatio, devicePixelRatio);
 
-    // Background
+    // ── Background ─────────────────────────────────────────────────────────
     ctx.fillStyle = '#0b0b12';
     ctx.fillRect(0, 0, W, H);
 
-    // Grid — vertical (frequency)
-    ctx.strokeStyle = 'rgba(80,90,130,0.25)';
+    // ── Grid ───────────────────────────────────────────────────────────────
     ctx.lineWidth = 1;
     for (const f of FREQ_TICKS) {
-      const x = freqToX(f, W);
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      ctx.strokeStyle = 'rgba(80,90,130,0.25)';
+      ctx.beginPath(); ctx.moveTo(freqToX(f, W), 0); ctx.lineTo(freqToX(f, W), H); ctx.stroke();
     }
-
-    // Grid — horizontal (dB)
     for (const db of DB_TICKS) {
       const y = gainToY(db, H);
-      ctx.strokeStyle = db === 0 ? 'rgba(200,210,255,0.25)' : 'rgba(80,90,130,0.2)';
+      ctx.strokeStyle = db === 0 ? 'rgba(200,210,255,0.25)' : 'rgba(80,90,130,0.18)';
       ctx.lineWidth   = db === 0 ? 1.5 : 1;
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
 
-    // Spectrum analyzer bars (gray)
-    const barW = W / spectrum.length;
-    for (let i = 0; i < spectrum.length; i++) {
-      const x  = i * barW;
-      const barH = Math.max(0, ((spectrum[i] + DB_RANGE) / (DB_RANGE * 2)) * H);
-      const y  = H - barH;
-      ctx.fillStyle = `rgba(160,170,200,${0.10 + 0.08 * (spectrum[i] + DB_RANGE) / (DB_RANGE * 2)})`;
-      ctx.fillRect(x, y, Math.max(1, barW - 0.5), barH);
+    // ── Spectrum (live or static) ──────────────────────────────────────────
+    if (liveSpectrum && liveSpectrum.length > 0) {
+      // Map FFT bins (Nyquist → 0 Hz) to canvas x-positions
+      // AnalyserNode gives bins from 0 Hz to sampleRate/2
+      const nyquist  = 24000; // assume 48 kHz sample rate (worst case 44.1 kHz → OK)
+      const binCount = liveSpectrum.length;
+      const FLOOR    = -100; // dB floor for display
+
+      for (let i = 1; i < binCount; i++) {
+        const f  = (i / binCount) * nyquist;
+        if (f < 20 || f > 20000) continue;
+        const x1 = freqToX(f, W);
+        const x0 = freqToX(((i - 1) / binCount) * nyquist || 20, W);
+        const db = Math.max(FLOOR, liveSpectrum[i]);
+        const norm = (db - FLOOR) / (-FLOOR); // 0 = silent, 1 = 0 dBFS
+        const barH = norm * H;
+        const alpha = 0.12 + norm * 0.22;
+        ctx.fillStyle = `rgba(160,190,255,${alpha})`;
+        ctx.fillRect(x0, H - barH, Math.max(0.5, x1 - x0), barH);
+      }
+    } else {
+      // Static placeholder spectrum
+      const barW = W / staticSpec.length;
+      for (let i = 0; i < staticSpec.length; i++) {
+        const db   = staticSpec[i];
+        const barH = Math.max(0, ((db + DB_RANGE) / (DB_RANGE * 2)) * H);
+        const alpha = 0.09 + 0.07 * (db + DB_RANGE) / (DB_RANGE * 2);
+        ctx.fillStyle = `rgba(160,170,200,${alpha})`;
+        ctx.fillRect(i * barW, H - barH, Math.max(0.5, barW - 0.5), barH);
+      }
     }
 
     if (curve.length < 2) return;
 
-    // ── Rainbow gradient (reused for fill + stroke) ─────────────────────────
+    // ── Rainbow gradient ───────────────────────────────────────────────────
     const makeGrad = () => {
       const g = ctx.createLinearGradient(0, 0, W, 0);
-      g.addColorStop(0,    '#7C3AED'); // purple
-      g.addColorStop(0.18, '#F59E0B'); // amber
-      g.addColorStop(0.45, '#10B981'); // green
-      g.addColorStop(0.65, '#06B6D4'); // cyan
-      g.addColorStop(1,    '#7C3AED'); // back to purple
+      g.addColorStop(0,    '#7C3AED');
+      g.addColorStop(0.18, '#F59E0B');
+      g.addColorStop(0.45, '#10B981');
+      g.addColorStop(0.65, '#06B6D4');
+      g.addColorStop(1,    '#7C3AED');
       return g;
     };
 
-    // ── EQ curve path ───────────────────────────────────────────────────────
+    // ── EQ curve path ──────────────────────────────────────────────────────
     const buildPath = () => {
       ctx.beginPath();
       curve.forEach((pt, i) => {
@@ -128,7 +148,7 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
       });
     };
 
-    // Filled area
+    // Fill
     ctx.save();
     buildPath();
     const lastX = freqToX(curve[curve.length - 1].frequency, W);
@@ -136,14 +156,13 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
     ctx.lineTo(lastX, zero);
     ctx.lineTo(freqToX(curve[0].frequency, W), zero);
     ctx.closePath();
-    const fillGrad = makeGrad();
-    ctx.fillStyle = fillGrad;
-    ctx.globalAlpha = bypass ? 0.06 : 0.22;
+    ctx.fillStyle   = makeGrad();
+    ctx.globalAlpha = bypass ? 0.05 : 0.2;
     ctx.fill();
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    // Stroked curve
+    // Stroke
     ctx.save();
     buildPath();
     ctx.strokeStyle = makeGrad();
@@ -156,8 +175,9 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
     ctx.shadowBlur  = 0;
     ctx.restore();
 
-    // ── Band nodes ───────────────────────────────────────────────────────────
+    // ── Band nodes ────────────────────────────────────────────────────────
     for (const band of bands) {
+      if (!band.enabled) continue;
       const x     = freqToX(band.frequency, W);
       const yGain = bypass ? 0 : band.gain;
       const y     = gainToY(yGain, H);
@@ -165,9 +185,6 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
       const sel   = band.id === selectedBand;
       const r     = sel ? 14 : 12;
 
-      if (!band.enabled) continue;
-
-      // Outer ring
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.strokeStyle = color;
@@ -176,26 +193,25 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
       ctx.stroke();
       ctx.globalAlpha = 1;
 
-      // Fill (dark translucent)
       ctx.beginPath();
       ctx.arc(x, y, r - 1.5, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(10,10,18,${sel ? 0.85 : 0.7})`;
       ctx.fill();
 
-      // Number label
-      ctx.fillStyle   = color;
-      ctx.font        = `bold ${sel ? 12 : 11}px sans-serif`;
-      ctx.textAlign   = 'center';
+      ctx.fillStyle    = color;
+      ctx.font         = `bold ${sel ? 12 : 11}px sans-serif`;
+      ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${band.id + 1}`, x, y);
     }
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  }, [curve, bands, selectedBand, bypass, spectrum]);
+  }, [curve, bands, selectedBand, bypass, liveSpectrum, staticSpec]);
 
+  // Redraw on every prop change (liveSpectrum changes every rAF frame)
   useEffect(() => { draw(); }, [draw]);
 
-  // Mouse helpers
-  const pos = (e: React.MouseEvent) => {
+  // ── Drag interaction ──────────────────────────────────────────────────────
+  const getPos = (e: React.MouseEvent) => {
     const r = canvasRef.current!.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
@@ -209,10 +225,10 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    const { x, y } = pos(e);
+    const { x, y } = getPos(e);
     const W = canvasRef.current!.offsetWidth;
     const H = canvasRef.current!.offsetHeight;
-    let best = { id: -1, d: 18 };
+    let best = { id: -1, d: 20 };
     for (const b of bands) {
       if (!b.enabled) continue;
       const bx = freqToX(b.frequency, W);
@@ -224,14 +240,13 @@ export function FruityEQCanvas({ curve, bands, selectedBand, onSelectBand, onBan
   };
   const handleMouseMove = (e: React.MouseEvent) => {
     if (dragging.current === null) return;
-    const { x, y } = pos(e);
-    const id   = dragging.current;
-    const band = bands.find(b => b.id === id);
+    const { x, y } = getPos(e);
+    const band = bands.find(b => b.id === dragging.current);
     const freq = xToFreq(x);
     const gain = (band?.type === FilterType.HighPass || band?.type === FilterType.LowPass)
-      ? band.gain
+      ? (band?.gain ?? 0)
       : yToGain(y);
-    onBandDrag(id, freq, gain);
+    onBandDrag(dragging.current!, freq, gain);
   };
   const handleMouseUp = () => { dragging.current = null; };
 
