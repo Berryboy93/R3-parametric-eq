@@ -46,12 +46,14 @@ function buildPinkNoise(ctx: AudioContext): AudioBuffer {
 }
 
 export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
-  const [isPlaying,   setIsPlaying]   = useState(false);
-  const [sourceMode,  setSourceMode]  = useState<AudioSourceMode>('pink-noise');
-  const [spectrumData, setSpectrum]   = useState<Float32Array | null>(null);
-  const [sourceError, setSourceError] = useState<string | null>(null);
-  const [fileReady,   setFileReady]   = useState(false);
-  const [fileName,    setFileName]    = useState<string | null>(null);
+  const [isPlaying,      setIsPlaying]      = useState(false);
+  const [sourceMode,     setSourceMode]     = useState<AudioSourceMode>('pink-noise');
+  const [spectrumData,   setSpectrum]       = useState<Float32Array | null>(null);
+  const [sourceError,    setSourceError]    = useState<string | null>(null);
+  const [fileReady,      setFileReady]      = useState(false);
+  const [fileName,       setFileName]       = useState<string | null>(null);
+  const [fileDuration,   setFileDuration]   = useState(0);
+  const [fileCurrentTime, setFileCurrentTime] = useState(0);
 
   // Audio node refs
   const ctxRef         = useRef<AudioContext | null>(null);
@@ -65,6 +67,9 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   const pinkRef        = useRef<AudioBuffer | null>(null);
   const fileBufferRef  = useRef<AudioBuffer | null>(null);
   const playingRef     = useRef(false);
+  // Seek / position tracking for file mode
+  const startedAtRef   = useRef<number>(0);   // ctx.currentTime when src.start() was called
+  const offsetRef      = useRef<number>(0);    // buffer offset where playback began
   // Ref copy of sourceMode to avoid stale closure in play()
   const sourceModeRef  = useRef<AudioSourceMode>('pink-noise');
   useEffect(() => { sourceModeRef.current = sourceMode; }, [sourceMode]);
@@ -88,7 +93,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     syncFilters(bands, bypass, ctxRef.current.currentTime);
   }, [bands, bypass, syncFilters]);
 
-  // ── RAF loop for spectrum data ───────────────────────────────────────────────
+  // ── RAF loop for spectrum data + file position ───────────────────────────────
   const startRaf = useCallback(() => {
     const analyser = analyserRef.current;
     if (!analyser) return;
@@ -97,6 +102,12 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
       if (!playingRef.current) return;
       analyser.getFloatFrequencyData(buf);
       setSpectrum(new Float32Array(buf));
+      // Track playback position when in file mode
+      if (sourceModeRef.current === 'file' && ctxRef.current && fileBufferRef.current) {
+        const dur = fileBufferRef.current.duration;
+        const rawPos = offsetRef.current + (ctxRef.current.currentTime - startedAtRef.current);
+        setFileCurrentTime(dur > 0 ? rawPos % dur : 0);
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -118,6 +129,9 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
       const arrayBuf   = await file.arrayBuffer();
       const audioBuf   = await ctx.decodeAudioData(arrayBuf);
       fileBufferRef.current = audioBuf;
+      setFileDuration(audioBuf.duration);
+      setFileCurrentTime(0);
+      offsetRef.current = 0;
       setFileReady(true);
       setFileName(file.name);
     } catch {
@@ -195,6 +209,8 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
       src.loop = true;
       bufSrcRef.current = src;
       wire(src);
+      offsetRef.current = 0;
+      startedAtRef.current = ctx.currentTime;
       src.start();
     } else {
       // ── Pink noise (default) ─────────────────────────────────────────────────
@@ -212,6 +228,33 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     setIsPlaying(true);
     startRaf();
   }, [bands, bypass, syncFilters, startRaf, ensureCtx]);
+
+  // ── Seek (file mode only) ─────────────────────────────────────────────────────
+  const seek = useCallback((t: number) => {
+    if (!fileBufferRef.current || !ctxRef.current) return;
+    const dur = fileBufferRef.current.duration;
+    const newOffset = Math.max(0, Math.min(t, dur));
+    setFileCurrentTime(newOffset);
+    offsetRef.current = newOffset;
+    if (!playingRef.current) return;
+    const ctx = ctxRef.current;
+    // Swap the buffer source to the new position
+    try { bufSrcRef.current?.stop(); } catch {}
+    bufSrcRef.current?.disconnect();
+    bufSrcRef.current = null;
+    const src = ctx.createBufferSource();
+    src.buffer = fileBufferRef.current;
+    src.loop = true;
+    // Re-attach to existing filter chain
+    if (filtersRef.current.length > 0) {
+      src.connect(filtersRef.current[0]);
+    } else if (analyserRef.current) {
+      src.connect(analyserRef.current);
+    }
+    bufSrcRef.current = src;
+    startedAtRef.current = ctx.currentTime;
+    src.start(0, newOffset);
+  }, []);
 
   // ── Stop ─────────────────────────────────────────────────────────────────────
   const stop = useCallback(() => {
@@ -245,5 +288,6 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     sourceMode, setSourceMode,
     sourceError, setSourceError,
     loadFile, fileReady, fileName,
+    fileDuration, fileCurrentTime, seek,
   };
 }

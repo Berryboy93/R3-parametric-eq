@@ -3,7 +3,7 @@
  * PRD §9.3: Plugin UI — dark panel · spectrum display · 8 band nodes · 8 vertical faders
  */
 
-import { useRef } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { FruityEQCanvas } from './FruityEQCanvas';
 import { AIPanel } from './AIPanel';
 import { BAND_COLORS } from './BandStrip';
@@ -61,6 +61,16 @@ export interface EQPluginPanelProps {
   onToggleAB: () => void;
   // AI
   onAIApply: (bandId: number, freq: number, gain: number, q: number) => void;
+  // File seek
+  fileDuration: number;
+  fileCurrentTime: number;
+  onSeek: (t: number) => void;
+}
+
+function fmtTime(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
 export function EQPluginPanel(props: EQPluginPanelProps) {
@@ -69,19 +79,68 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
     isPlaying, onPlay, onStop, sourceMode, onSourceMode, sourceError, onClearError, loadFile, fileReady, fileName,
     bypass, onToggleBypass, canUndo, canRedo, onUndo, onRedo, onReset, onOpenPresets, onShowHelp,
     activeSlot, onCaptureSlot, onToggleAB, onAIApply,
+    fileDuration, fileCurrentTime, onSeek,
   } = props;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.types.includes('Files')) setIsDraggingOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    // Only clear when leaving the panel itself, not a child
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDraggingOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('audio/') && !/\.(mp3|wav|flac|ogg|aac|m4a|opus)$/i.test(file.name)) return;
+    onSourceMode('file');
+    loadFile(file);
+  }, [onSourceMode, loadFile]);
 
   return (
-    <div style={{
-      background: '#0d0d18',
-      border: '1px solid #1a1a2e',
-      borderTop: '2px solid rgba(183,255,0,0.3)',
-      borderRadius: '0 0 12px 12px',
-      boxShadow: '0 0 0 1px rgba(183,255,0,0.03), 0 32px 80px rgba(0,0,0,0.7)',
-      overflow: 'hidden',
-    }}>
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      style={{
+        position: 'relative',
+        background: '#0d0d18',
+        border: `1px solid ${isDraggingOver ? 'rgba(183,255,0,0.5)' : '#1a1a2e'}`,
+        borderTop: `2px solid ${isDraggingOver ? 'rgba(183,255,0,0.8)' : 'rgba(183,255,0,0.3)'}`,
+        borderRadius: '0 0 12px 12px',
+        boxShadow: '0 0 0 1px rgba(183,255,0,0.03), 0 32px 80px rgba(0,0,0,0.7)',
+        overflow: 'hidden',
+        transition: 'border-color 120ms',
+      }}
+    >
+      {/* ── Drag-over overlay ──────────────────────────────────────────── */}
+      {isDraggingOver && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 50,
+          background: 'rgba(183,255,0,0.05)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <div style={{
+            border: '2px dashed rgba(183,255,0,0.5)', borderRadius: 10,
+            padding: '20px 40px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🎵</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#B7FF00', letterSpacing: '0.08em' }}>
+              DROP AUDIO FILE
+            </div>
+            <div style={{ fontSize: 10, color: '#606040', marginTop: 4 }}>MP3 · WAV · FLAC · OGG · AAC</div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hidden file input ──────────────────────────────────────────── */}
       <input
@@ -267,6 +326,40 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             onClick={onClearError}
             style={{ background: 'none', border: 'none', color: '#604040', cursor: 'pointer', fontSize: 14 }}
           >✕</button>
+        </div>
+      )}
+
+      {/* ── Seek / progress bar (file mode only) ───────────────────── */}
+      {sourceMode === 'file' && fileReady && fileDuration > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '5px 14px', background: '#080810',
+          borderBottom: '1px solid #111120',
+        }}>
+          <span style={{
+            fontSize: 9, fontFamily: 'monospace', color: '#505068',
+            minWidth: 30, textAlign: 'right',
+          }}>
+            {fmtTime(fileCurrentTime)}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={fileDuration}
+            step={0.1}
+            value={fileCurrentTime}
+            onChange={e => onSeek(parseFloat(e.target.value))}
+            style={{
+              flex: 1, height: 3, cursor: 'pointer',
+              accentColor: '#B7FF00',
+            }}
+          />
+          <span style={{
+            fontSize: 9, fontFamily: 'monospace', color: '#303040',
+            minWidth: 30,
+          }}>
+            {fmtTime(fileDuration)}
+          </span>
         </div>
       )}
 

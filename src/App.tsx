@@ -40,6 +40,7 @@ export function App() {
     isPlaying, play, stop, spectrumData,
     sourceMode, setSourceMode, sourceError, setSourceError,
     loadFile, fileReady, fileName,
+    fileDuration, fileCurrentTime, seek,
   } = useAudioEngine(state.bands, state.bypass);
 
   useKeyboardShortcuts({
@@ -176,6 +177,9 @@ export function App() {
           onCaptureSlot={captureToSlot}
           onToggleAB={toggleAB}
           onAIApply={handleAIApply}
+          fileDuration={fileDuration}
+          fileCurrentTime={fileCurrentTime}
+          onSeek={seek}
         />
 
         {/* ── EQ Operations ───────────────────────────────────────────────── */}
