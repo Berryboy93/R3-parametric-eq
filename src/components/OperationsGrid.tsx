@@ -80,80 +80,68 @@ interface Props {
 export function OperationsGrid({ onApply }: Props) {
   return (
     <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(5, 1fr)',
-      gap: 10,
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 8,
     }}>
       {OPERATIONS.map(op => (
-        <OperationCard key={op.id} op={op} onApply={() => onApply(op.bandId, op.update)} />
+        <OperationButton key={op.id} op={op} onApply={() => onApply(op.bandId, op.update)} />
       ))}
     </div>
   );
 }
 
-function OperationCard({ op, onApply }: { op: Operation; onApply: () => void }) {
+function OperationButton({ op, onApply }: { op: Operation; onApply: () => void }) {
   return (
-    <div
+    <button
       onClick={onApply}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && onApply()}
+      title={`${op.desc} — ${op.detail}`}
       style={{
+        display: 'flex', alignItems: 'center', gap: 8,
         background: '#0a0a14',
-        border: '1px solid #1a1a2a',
-        borderTop: `2px solid ${op.color}50`,
-        borderRadius: '0 0 8px 8px',
-        overflow: 'hidden',
+        border: `1px solid ${op.color}30`,
+        borderRadius: 6,
+        padding: '6px 14px',
         cursor: 'pointer',
         outline: 'none',
-        transition: 'transform 100ms',
+        transition: 'background 80ms, border-color 80ms, transform 80ms',
         userSelect: 'none',
       }}
       onMouseEnter={e => {
-        const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = `${op.color}55`;
-        el.style.background = '#0d0d1a';
+        const el = e.currentTarget as HTMLButtonElement;
+        el.style.background = '#0d0d1c';
+        el.style.borderColor = `${op.color}70`;
       }}
       onMouseLeave={e => {
-        const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = '#1a1a2a';
+        const el = e.currentTarget as HTMLButtonElement;
         el.style.background = '#0a0a14';
+        el.style.borderColor = `${op.color}30`;
+        el.style.transform = 'scale(1)';
       }}
-      onMouseDown={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(0.98)'; }}
-      onMouseUp={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)'; }}
+      onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.96)'; }}
+      onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
     >
-      {/* Mini EQ curve preview */}
-      <MiniCurve shape={op.shape} color={op.color} />
-
-      {/* Card body */}
-      <div style={{ padding: '10px 12px 14px' }}>
-        <div style={{
-          fontSize: 12, fontWeight: 800, color: '#d0d0e8',
-          marginBottom: 4, letterSpacing: '0.03em',
-        }}>
-          {op.name}
-        </div>
-        <div style={{
-          fontSize: 10, color: '#484860', lineHeight: 1.55,
-          marginBottom: 10,
-        }}>
-          {op.desc}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{
-            fontSize: 9, fontFamily: 'monospace',
-            color: op.color, letterSpacing: '0.04em',
-          }}>
-            {op.detail}
-          </span>
-          <span style={{
-            fontSize: 9, fontWeight: 800, color: op.color,
-            letterSpacing: '0.08em', opacity: 0.65,
-          }}>
-            APPLY →
-          </span>
-        </div>
-      </div>
-    </div>
+      {/* Color dot */}
+      <span style={{
+        width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+        background: op.color,
+        boxShadow: `0 0 6px ${op.color}80`,
+      }} />
+      {/* Label */}
+      <span style={{
+        fontSize: 11, fontWeight: 700, color: '#c0c0d8',
+        letterSpacing: '0.04em', whiteSpace: 'nowrap',
+        fontFamily: 'Montserrat, sans-serif',
+      }}>
+        {op.name}
+      </span>
+      {/* Detail */}
+      <span style={{
+        fontSize: 9, fontFamily: 'monospace',
+        color: op.color, opacity: 0.7, letterSpacing: '0.03em',
+      }}>
+        {op.detail}
+      </span>
+    </button>
   );
 }

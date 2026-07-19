@@ -3,7 +3,7 @@
  * PRD §9.3: Masterclass page layout — header · plugin panel · operations · pro tips · footer
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { EQPluginPanel } from './components/EQPluginPanel';
 import { OperationsGrid } from './components/OperationsGrid';
 import { PresetBrowser } from './components/PresetBrowser';
@@ -78,44 +78,44 @@ export function App() {
       }}>
         <div style={{
           maxWidth: 1024, margin: '0 auto',
-          padding: '30px 24px 26px',
-          display: 'flex', alignItems: 'center', gap: 22,
+          padding: '10px 24px 10px',
+          display: 'flex', alignItems: 'center', gap: 14,
         }}>
           {/* R3 NATIVE circular badge */}
           <div style={{
-            width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+            width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
             background: 'radial-gradient(circle at 35% 35%, #0f0f20, #060608)',
             border: '1.5px solid rgba(183,255,0,0.35)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 24px rgba(183,255,0,0.12), inset 0 0 12px rgba(183,255,0,0.04)',
+            boxShadow: '0 0 16px rgba(183,255,0,0.10), inset 0 0 8px rgba(183,255,0,0.04)',
           }}>
             <span style={{
-              fontSize: 17, fontWeight: 900, color: '#B7FF00',
+              fontSize: 11, fontWeight: 900, color: '#B7FF00',
               letterSpacing: '0.04em',
               fontFamily: 'Bebas Neue, Montserrat, sans-serif',
             }}>R3</span>
           </div>
 
           {/* Title block */}
-          <div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <div style={{
-              fontSize: 10, color: '#35354a', letterSpacing: '0.24em',
-              marginBottom: 3, fontWeight: 700,
-            }}>
-              R3 V4 LOOPSTATION
-            </div>
-            <div style={{
-              fontSize: 44, lineHeight: 1,
+              fontSize: 22, lineHeight: 1,
               fontFamily: 'Bebas Neue, Montserrat, sans-serif',
               color: '#B7FF00',
               letterSpacing: '0.05em',
-              textShadow: '0 0 40px rgba(183,255,0,0.2)',
+              textShadow: '0 0 24px rgba(183,255,0,0.18)',
             }}>
               EQ MASTERCLASS
             </div>
             <div style={{
-              fontSize: 13, color: '#50506a', fontStyle: 'italic',
-              marginTop: 5, letterSpacing: '0.02em',
+              fontSize: 10, color: '#35354a', letterSpacing: '0.14em',
+              fontWeight: 700,
+            }}>
+              R3 V4
+            </div>
+            <div style={{
+              fontSize: 10, color: '#40405a', fontStyle: 'italic',
+              letterSpacing: '0.02em',
             }}>
               by DJ Ernesto
             </div>
@@ -124,12 +124,12 @@ export function App() {
           {/* Decorative rule */}
           <div style={{
             flex: 1, height: 1,
-            background: 'linear-gradient(to right, rgba(183,255,0,0.12), transparent)',
+            background: 'linear-gradient(to right, rgba(183,255,0,0.10), transparent)',
           }} />
 
           {/* Slot indicator pill */}
           <div style={{
-            padding: '4px 12px', borderRadius: 20,
+            padding: '3px 10px', borderRadius: 20,
             border: '1px solid rgba(183,255,0,0.15)',
             background: 'rgba(183,255,0,0.04)',
             fontSize: 9, fontWeight: 800, color: '#B7FF0070',
@@ -180,37 +180,10 @@ export function App() {
 
         {/* ── EQ Operations ───────────────────────────────────────────────── */}
         <SectionLabel>EQ OPERATIONS</SectionLabel>
-        <p style={{ fontSize: 11, color: '#404055', marginBottom: 16, lineHeight: 1.6 }}>
-          Click any card to apply that EQ move to your signal. Each operation targets a specific
-          band — you can stack multiple operations and fine-tune from the canvas.
-        </p>
         <OperationsGrid onApply={handleOperation} />
 
         {/* ── Pro Tips ────────────────────────────────────────────────────── */}
-        <SectionLabel>PRO TIPS</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-          {PRO_TIPS.map(tip => (
-            <div
-              key={tip.title}
-              style={{
-                background: '#09090f',
-                border: '1px solid #151525',
-                borderRadius: 10,
-                padding: '20px 18px 22px',
-              }}
-            >
-              <div style={{ fontSize: 26, marginBottom: 12, lineHeight: 1 }}>{tip.icon}</div>
-              <div style={{
-                fontSize: 12, fontWeight: 800, color: '#c0c0d8',
-                marginBottom: 8, letterSpacing: '0.04em',
-                fontFamily: 'Montserrat, sans-serif',
-              }}>{tip.title}</div>
-              <p style={{
-                fontSize: 11, color: '#484860', lineHeight: 1.75, margin: 0,
-              }}>{tip.body}</p>
-            </div>
-          ))}
-        </div>
+        <ProTipsAccordion />
 
         {/* ── Footer quote ────────────────────────────────────────────────── */}
         <div style={{ marginTop: 72, display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -297,6 +270,71 @@ const PRO_TIPS = [
     body: 'Use bypass frequently to A/B compare your EQ against the raw signal. If you can\'t clearly hear the difference on playback, the change may be unnecessary. The best EQ move is often the one you don\'t make.',
   },
 ];
+
+// ── Pro Tips accordion ────────────────────────────────────────────────────────
+
+function ProTipsAccordion() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <div style={{ marginTop: 0 }}>
+      <SectionLabel>PRO TIPS</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {PRO_TIPS.map((tip, i) => {
+          const isOpen = openIndex === i;
+          return (
+            <div
+              key={tip.title}
+              style={{
+                background: '#09090f',
+                border: '1px solid #151525',
+                borderRadius: 8,
+                overflow: 'hidden',
+              }}
+            >
+              {/* Header row — always visible */}
+              <button
+                onClick={() => setOpenIndex(isOpen ? null : i)}
+                style={{
+                  width: '100%',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '9px 14px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  outline: 'none', textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{tip.icon}</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: '#a0a0be',
+                  letterSpacing: '0.05em', fontFamily: 'Montserrat, sans-serif', flex: 1,
+                }}>
+                  {tip.title}
+                </span>
+                <span style={{
+                  fontSize: 10, color: '#303048', transition: 'transform 150ms',
+                  transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  display: 'inline-block',
+                }}>▾</span>
+              </button>
+
+              {/* Collapsible body */}
+              {isOpen && (
+                <div style={{
+                  padding: '0 14px 12px 38px',
+                  fontSize: 11, color: '#484860', lineHeight: 1.75,
+                  borderTop: '1px solid #111120',
+                  paddingTop: 10,
+                }}>
+                  {tip.body}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // ── Shortcut overlay ──────────────────────────────────────────────────────────
 
