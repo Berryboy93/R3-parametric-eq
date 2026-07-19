@@ -11,7 +11,7 @@ import { FilterType } from '../dsp';
 import type { EQBand, FrequencyResponsePoint, EQState } from '../dsp';
 import type { AudioSourceMode } from '../hooks/useAudioEngine';
 
-const DB_LABELS  = [18, 12, 6, 0, -6, -12, -18];
+const DB_LABELS  = [24, 12, 6, 0, -6, -12, -24];
 const FREQ_TICKS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
 
 const TYPE_SHORT: Partial<Record<FilterType, string>> = {
@@ -505,8 +505,8 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
         }} />
         <input
           type="range"
-          min={-18}
-          max={18}
+          min={-24}
+          max={24}
           step={0.1}
           value={noGain ? 0 : band.gain}
           disabled={noGain || !band.enabled}

@@ -20,8 +20,8 @@ export const BAND_COLORS = [
 ];
 
 const FREQ_TICKS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
-export const DB_TICKS = [18, 12, 6, 0, -6, -12, -18];
-export const DB_RANGE = 18;
+export const DB_TICKS = [24, 12, 6, 0, -6, -12, -24];
+export const DB_RANGE = 24;
 
 export function freqToX(f: number, W: number) {
   return (Math.log10(f / 20) / Math.log10(20000 / 20)) * W;

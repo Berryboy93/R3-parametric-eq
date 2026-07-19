@@ -9,8 +9,8 @@ import type { FrequencyResponsePoint, EQBand } from '../dsp';
 import { FilterType } from '../dsp';
 
 export const NEON_GREEN = '#B7FF00';
-export const DB_TICKS   = [18, 12, 6, 0, -6, -12, -18];
-export const DB_RANGE   = 18;
+export const DB_TICKS   = [24, 12, 6, 0, -6, -12, -24];
+export const DB_RANGE   = 24;
 
 export function freqToX(f: number, W: number): number {
   return (Math.log10(f / 20) / Math.log10(20000 / 20)) * W;

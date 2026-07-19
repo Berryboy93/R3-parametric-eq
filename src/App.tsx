@@ -70,7 +70,7 @@ export function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#06060a', overflowY: 'auto' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', overflowY: 'auto' }}>
 
       {/* ── Masthead ──────────────────────────────────────────────────────── */}
       <div style={{
