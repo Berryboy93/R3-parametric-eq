@@ -8,15 +8,16 @@ import { FilterType } from '../dsp';
 import type { EQBand } from '../dsp';
 
 // All bands use Neon Green per R3 NATIVE brand spec (RFQ v1.0)
+// Frequency-spectrum color scale: warm (low) → cool (high)
 export const BAND_COLORS = [
-  '#B7FF00', // 1 HP
-  '#B7FF00', // 2 LS
-  '#B7FF00', // 3 PK
-  '#B7FF00', // 4 PK
-  '#B7FF00', // 5 PK
-  '#B7FF00', // 6 PK
-  '#B7FF00', // 7 HS
-  '#B7FF00', // 8 LP
+  '#FF3B30', // 1 HP  — Red        (~80 Hz, sub bass)
+  '#FF8C1A', // 2 LS  — Orange     (~100 Hz, bass)
+  '#FFD633', // 3 PK  — Yellow     (~300 Hz, low mid)
+  '#B7FF00', // 4 PK  — Neon Green (~1 kHz, mid) [brand]
+  '#00FF90', // 5 PK  — Mint       (~3 kHz, upper mid)
+  '#00C8FF', // 6 PK  — Cyan       (~6 kHz, presence)
+  '#A14BFF', // 7 HS  — Violet     (~10 kHz, air)
+  '#FF4DFF', // 8 LP  — Magenta    (~18 kHz, high)
 ];
 
 const TYPE_LABELS: Record<FilterType, string> = {

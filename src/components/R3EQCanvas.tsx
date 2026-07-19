@@ -7,6 +7,7 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react';
 import type { FrequencyResponsePoint, EQBand } from '../dsp';
 import { FilterType } from '../dsp';
+import { BAND_COLORS } from './BandStrip';
 
 export const NEON_GREEN = '#B7FF00';
 export const DB_TICKS   = [24, 12, 6, 0, -6, -12, -24];
@@ -140,19 +141,20 @@ export function R3EQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDra
     ctx.shadowBlur    = 0;
     ctx.restore();
 
-    // ── Band nodes (all Neon Green per brand spec) ────────────────────────────
+    // ── Band nodes (per-band spectrum color scale) ───────────────────────────
     for (const band of bands) {
       if (!band.enabled) continue;
-      const x   = freqToX(band.frequency, W);
-      const y   = gainToY(bypass ? 0 : band.gain, H);
-      const sel = band.id === selectedBand;
-      const r   = sel ? 13 : 11;
+      const x     = freqToX(band.frequency, W);
+      const y     = gainToY(bypass ? 0 : band.gain, H);
+      const sel   = band.id === selectedBand;
+      const r     = sel ? 13 : 11;
+      const color = BAND_COLORS[band.id] ?? NEON_GREEN;
 
       // Outer glow ring (selected only)
       if (sel) {
         ctx.beginPath();
         ctx.arc(x, y, r + 3, 0, Math.PI * 2);
-        ctx.strokeStyle = `${NEON_GREEN}40`;
+        ctx.strokeStyle = `${color}40`;
         ctx.lineWidth   = 3;
         ctx.stroke();
       }
@@ -160,12 +162,12 @@ export function R3EQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDra
       // Ring
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.strokeStyle   = NEON_GREEN;
-      ctx.lineWidth     = sel ? 2 : 1.5;
-      ctx.shadowColor   = NEON_GREEN;
-      ctx.shadowBlur    = sel ? 10 : 4;
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = sel ? 2 : 1.5;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = sel ? 12 : 5;
       ctx.stroke();
-      ctx.shadowBlur    = 0;
+      ctx.shadowBlur  = 0;
 
       // Fill
       ctx.beginPath();
@@ -174,7 +176,7 @@ export function R3EQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDra
       ctx.fill();
 
       // Number
-      ctx.fillStyle    = NEON_GREEN;
+      ctx.fillStyle    = color;
       ctx.font         = `${sel ? 700 : 600} ${sel ? 12 : 11}px 'Montserrat', sans-serif`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
