@@ -210,8 +210,8 @@ export function FruityEQCanvas({
   // Redraw on every prop change (liveSpectrum changes every rAF frame)
   useEffect(() => { draw(); }, [draw]);
 
-  // ── Drag interaction ──────────────────────────────────────────────────────
-  const getPos = (e: React.MouseEvent) => {
+  // ── Drag interaction (pointer events — works for mouse, touch & stylus) ──────
+  const getPos = (e: React.PointerEvent) => {
     const r = canvasRef.current!.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
@@ -224,11 +224,11 @@ export function FruityEQCanvas({
     return Math.max(-DB_RANGE, Math.min(DB_RANGE, ((H / 2 - y) / (H / 2 * 0.9)) * DB_RANGE));
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const { x, y } = getPos(e);
     const W = canvasRef.current!.offsetWidth;
     const H = canvasRef.current!.offsetHeight;
-    let best = { id: -1, d: 20 };
+    let best = { id: -1, d: 22 };
     for (const b of bands) {
       if (!b.enabled) continue;
       const bx = freqToX(b.frequency, W);
@@ -236,9 +236,13 @@ export function FruityEQCanvas({
       const d  = Math.hypot(x - bx, y - by);
       if (d < best.d) best = { id: b.id, d };
     }
-    if (best.id >= 0) { onSelectBand(best.id); dragging.current = best.id; }
+    if (best.id >= 0) {
+      onSelectBand(best.id);
+      dragging.current = best.id;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
   };
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (dragging.current === null) return;
     const { x, y } = getPos(e);
     const band = bands.find(b => b.id === dragging.current);
@@ -248,16 +252,16 @@ export function FruityEQCanvas({
       : yToGain(y);
     onBandDrag(dragging.current!, freq, gain);
   };
-  const handleMouseUp = () => { dragging.current = null; };
+  const handlePointerUp = () => { dragging.current = null; };
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair', touchAction: 'none' }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     />
   );
 }

@@ -2,7 +2,7 @@
  * useEQState — React hook for EQ state with undo/redo
  */
 
-import { useReducer, useCallback, useMemo } from 'react';
+import { useReducer, useCallback, useMemo, useState } from 'react';
 import type { EQState, EQBandUpdate, UndoRedoState } from '../dsp';
 import { createParametricEQ } from '../dsp';
 
@@ -69,6 +69,37 @@ export function useEQState(initialState?: EQState) {
 
   const state = undoRedoState.present;
 
+  // ── A/B comparison slots ───────────────────────────────────────────────────
+  const [abSlots, setAbSlots] = useState<{ A: EQState; B: EQState }>({
+    A: defaultState,
+    B: defaultState,
+  });
+  const [activeSlot, setActiveSlot] = useState<'A' | 'B'>('A');
+
+  /** Save the current state into the given slot and mark it active. */
+  const captureToSlot = useCallback(
+    (slot: 'A' | 'B') => {
+      setAbSlots(prev => ({ ...prev, [slot]: state }));
+      setActiveSlot(slot);
+    },
+    [state]
+  );
+
+  /**
+   * Auto-save current state into the active slot, then switch to the other
+   * slot and load its state. Adds to undo history so you can undo the switch.
+   */
+  const toggleAB = useCallback(() => {
+    const next: 'A' | 'B' = activeSlot === 'A' ? 'B' : 'A';
+    // Save current work to the active slot before switching
+    setAbSlots(prev => {
+      const updated = { ...prev, [activeSlot]: state };
+      dispatch({ type: 'SET_STATE', payload: updated[next] });
+      return updated;
+    });
+    setActiveSlot(next);
+  }, [state, activeSlot]);
+
   const setState = useCallback((newState: EQState) => dispatch({ type: 'SET_STATE', payload: newState }), []);
   const updateBand = useCallback((bandId: number, updates: Partial<EQBandUpdate>) => dispatch({ type: 'UPDATE_BAND', payload: { bandId, updates } }), []);
   const setInputGain = useCallback((gain: number) => dispatch({ type: 'SET_INPUT_GAIN', payload: gain }), []);
@@ -82,5 +113,9 @@ export function useEQState(initialState?: EQState) {
   const canUndo = undoRedoState.past.length > 0;
   const canRedo = undoRedoState.future.length > 0;
 
-  return { state, setState, updateBand, setInputGain, setOutputGain, toggleBypass, toggleAnalyzer, reset, undo, redo, canUndo, canRedo, engine };
+  return {
+    state, setState, updateBand, setInputGain, setOutputGain,
+    toggleBypass, toggleAnalyzer, reset, undo, redo, canUndo, canRedo, engine,
+    abSlots, activeSlot, captureToSlot, toggleAB,
+  };
 }

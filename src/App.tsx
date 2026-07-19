@@ -1,22 +1,22 @@
 /**
  * R3 NATIVE Parametric EQ — main app shell
- * Clean professional layout: header · EQ canvas · band strip · status bar
+ * Features: A/B comparison, Preset Browser, AI Panel, touch support
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { FruityEQCanvas } from './components/FruityEQCanvas';
 import { BandStrip, BAND_COLORS } from './components/BandStrip';
+import { PresetBrowser } from './components/PresetBrowser';
+import { AIPanel } from './components/AIPanel';
 import { useEQState } from './hooks/useEQState';
 import { useAudioEngine } from './hooks/useAudioEngine';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { createFactoryPresets, FilterType } from './dsp';
+import { usePresetManager } from './hooks/usePresetManager';
+import { FilterType } from './dsp';
 import type { FrequencyResponsePoint, EQBand } from './dsp';
 import './styles/theme.css';
 
-const PRESETS     = createFactoryPresets();
-const PRESET_LIST = Array.from(PRESETS.values());
-
-const DB_LABELS = [18, 12, 6, 0, -6, -12, -18];
+const DB_LABELS  = [18, 12, 6, 0, -6, -12, -18];
 const FREQ_TICKS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
 
 function fmtFreq(f: number) { return f >= 1000 ? `${f / 1000}k` : `${f}`; }
@@ -31,12 +31,17 @@ const TYPE_NAMES: Partial<Record<FilterType, string>> = {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export function App() {
-  const { state, setState, updateBand, toggleBypass, reset, undo, redo, canUndo, canRedo, engine } =
-    useEQState();
+  const {
+    state, setState, updateBand, toggleBypass, reset, undo, redo,
+    canUndo, canRedo, engine,
+    abSlots, activeSlot, captureToSlot, toggleAB,
+  } = useEQState();
 
-  const [selectedBand, setSelectedBand] = useState(0);
-  const [activePreset, setActivePreset] = useState('flat');
-  const [showHelp, setShowHelp]         = useState(false);
+  const presets = usePresetManager();
+
+  const [selectedBand,    setSelectedBand]    = useState(0);
+  const [showHelp,        setShowHelp]        = useState(false);
+  const [showBrowser,     setShowBrowser]     = useState(false);
 
   useEffect(() => { engine.setState(state); }, [state, engine]);
 
@@ -52,17 +57,16 @@ export function App() {
     updateBand, toggleBypass, undo, redo, setShowHelp,
   });
 
-  const handlePreset = (id: string) => {
-    const p = PRESETS.get(id);
-    if (p) { setState(p.state as any); setActivePreset(id); }
-  };
-
   const handleDrag = (id: number, freq: number, gain: number) => {
     const b = state.bands.find(b => b.id === id);
     if (!b) return;
     const hasGain = b.type !== FilterType.HighPass && b.type !== FilterType.LowPass;
     updateBand(id, hasGain ? { frequency: freq, gain } : { frequency: freq });
   };
+
+  const handleAIApply = useCallback((bandId: number, freq: number, gain: number, q: number) => {
+    updateBand(bandId, { frequency: freq, gain, q, enabled: true });
+  }, [updateBand]);
 
   const selBand = state.bands.find(b => b.id === selectedBand);
 
@@ -72,40 +76,73 @@ export function App() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header style={{
         height: 46, flexShrink: 0,
-        background: '#0d0d18',
-        borderBottom: '1px solid #1a1a2a',
-        display: 'flex', alignItems: 'center',
-        padding: '0 16px', gap: 12,
+        background: '#0d0d18', borderBottom: '1px solid #1a1a2a',
+        display: 'flex', alignItems: 'center', padding: '0 16px', gap: 10,
       }}>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginRight: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginRight: 4, flexShrink: 0 }}>
           <span style={{ fontSize: 15, fontWeight: 900, color: '#B7FF00', letterSpacing: '0.12em' }}>R3</span>
           <span style={{ fontSize: 11, fontWeight: 700, color: '#606070', letterSpacing: '0.18em' }}>NATIVE</span>
           <span style={{ fontSize: 10, color: '#303040', letterSpacing: '0.12em', marginLeft: 6 }}>PARAMETRIC EQ</span>
         </div>
 
-        <div style={{ width: 1, height: 20, background: '#1e1e2e' }} />
+        <div style={{ width: 1, height: 20, background: '#1e1e2e', flexShrink: 0 }} />
 
-        {/* Preset selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 10, color: '#484860', letterSpacing: '0.08em' }}>PRESET</span>
-          <select
-            value={activePreset}
-            onChange={e => handlePreset(e.target.value)}
-            style={{
-              background: '#13131e', border: '1px solid #252535', borderRadius: 4,
-              color: '#a0a0c0', fontSize: 11, padding: '3px 8px', cursor: 'pointer',
-            }}
-          >
-            {PRESET_LIST.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </div>
+        {/* Preset browser button */}
+        <button
+          onClick={() => setShowBrowser(true)}
+          title="Open preset browser"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '4px 12px', borderRadius: 5, cursor: 'pointer',
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+            border: '1px solid #252535',
+            background: showBrowser ? 'rgba(183,255,0,0.08)' : 'transparent',
+            color: showBrowser ? '#B7FF00' : '#606080',
+            transition: 'all 150ms',
+          }}
+        >
+          <span style={{ fontSize: 11 }}>🎛</span> PRESETS
+        </button>
 
         <div style={{ flex: 1 }} />
 
-        {/* Transport controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Play / Stop */}
+        {/* A/B Comparison */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <span style={{ fontSize: 9, color: '#404055', letterSpacing: '0.08em', marginRight: 2 }}>A/B</span>
+          {(['A', 'B'] as const).map(slot => (
+            <button
+              key={slot}
+              onClick={() => {
+                if (slot === activeSlot) captureToSlot(slot);
+                else toggleAB();
+              }}
+              title={slot === activeSlot ? `Capture to slot ${slot}` : `Switch to slot ${slot}`}
+              style={{
+                width: 28, height: 26, borderRadius: 4, cursor: 'pointer',
+                fontSize: 11, fontWeight: 800, letterSpacing: '0.04em',
+                border: `1px solid ${slot === activeSlot ? '#B7FF0070' : '#252535'}`,
+                background: slot === activeSlot ? 'rgba(183,255,0,0.12)' : '#0f0f18',
+                color: slot === activeSlot ? '#B7FF00' : '#404055',
+                transition: 'all 150ms',
+              }}
+            >{slot}</button>
+          ))}
+          <button
+            onClick={toggleAB}
+            title="Toggle between A and B"
+            style={{
+              width: 28, height: 26, borderRadius: 4, cursor: 'pointer',
+              fontSize: 12, border: '1px solid #252535',
+              background: 'transparent', color: '#505065',
+            }}
+          >⇄</button>
+        </div>
+
+        <div style={{ width: 1, height: 18, background: '#1e1e2e', flexShrink: 0 }} />
+
+        {/* Transport + controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <button
             onClick={isPlaying ? stop : play}
             title={isPlaying ? 'Stop pink noise' : 'Play pink noise through EQ'}
@@ -125,7 +162,6 @@ export function App() {
 
           <div style={{ width: 1, height: 18, background: '#1e1e2e' }} />
 
-          {/* Bypass */}
           <button
             onClick={toggleBypass}
             title="Toggle bypass (B)"
@@ -143,7 +179,6 @@ export function App() {
 
           <div style={{ width: 1, height: 18, background: '#1e1e2e' }} />
 
-          {/* Undo / Redo / Reset */}
           <div style={{ display: 'flex', gap: 4 }}>
             {[
               { icon: '↩', label: 'Undo (Ctrl+Z)', act: undo,  dis: !canUndo },
@@ -177,9 +212,7 @@ export function App() {
             return (
               <span key={f} style={{
                 position: 'absolute', left: `${pct}%`,
-                fontSize: 9, color: '#404055',
-                transform: 'translateX(-50%)',
-                letterSpacing: '0.04em',
+                fontSize: 9, color: '#404055', transform: 'translateX(-50%)', letterSpacing: '0.04em',
               }}>{fmtFreq(f)}</span>
             );
           })}
@@ -187,30 +220,23 @@ export function App() {
 
         {/* dB rail + canvas */}
         <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 0 }}>
-          {/* dB labels */}
           <div style={{
             width: 36, flexShrink: 0,
-            display: 'flex', flexDirection: 'column', justifyContent: 'space-around',
-            paddingBottom: 2,
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingBottom: 2,
           }}>
             {DB_LABELS.map(db => (
               <span key={db} style={{
                 fontSize: 9, color: db === 0 ? '#606070' : '#383848',
-                textAlign: 'right', paddingRight: 6,
-                fontFamily: 'monospace',
+                textAlign: 'right', paddingRight: 6, fontFamily: 'monospace',
               }}>
                 {db > 0 ? `+${db}` : db}
               </span>
             ))}
           </div>
 
-          {/* Canvas */}
           <div style={{
-            flex: 1, minWidth: 0,
-            border: '1px solid #1a1a2a',
-            borderRadius: 6,
-            overflow: 'hidden',
-            background: '#0b0b12',
+            flex: 1, minWidth: 0, border: '1px solid #1a1a2a',
+            borderRadius: 6, overflow: 'hidden', background: '#0b0b12',
           }}>
             <FruityEQCanvas
               curve={curve}
@@ -223,6 +249,16 @@ export function App() {
             />
           </div>
         </div>
+      </div>
+
+      {/* ── AI Panel ───────────────────────────────────────────────────────── */}
+      <div style={{ flexShrink: 0, paddingTop: 8 }}>
+        <AIPanel
+          spectrumData={spectrumData}
+          isPlaying={isPlaying}
+          bands={state.bands}
+          onApply={handleAIApply}
+        />
       </div>
 
       {/* ── Band strip ─────────────────────────────────────────────────────── */}
@@ -239,10 +275,8 @@ export function App() {
       <div style={{
         height: 26, flexShrink: 0,
         background: '#0d0d18', borderTop: '1px solid #1a1a2a',
-        display: 'flex', alignItems: 'center',
-        padding: '0 16px', gap: 16,
+        display: 'flex', alignItems: 'center', padding: '0 16px', gap: 16,
       }}>
-        {/* Selected band info */}
         {selBand && (
           <>
             <span style={{
@@ -279,12 +313,34 @@ export function App() {
           </>
         )}
         <div style={{ flex: 1 }} />
+
+        {/* A/B slot indicator */}
+        <span style={{ fontSize: 9, color: '#B7FF0060', letterSpacing: '0.08em' }}>
+          SLOT {activeSlot}
+        </span>
+        <Dot />
+
         <span style={{ fontSize: 9, color: '#303040', letterSpacing: '0.06em' }}>
           TAB · ARROWS · B · E · ?
         </span>
       </div>
 
-      {/* ── Shortcut help overlay ───────────────────────────────────────────── */}
+      {/* ── Preset Browser modal ─────────────────────────────────────────── */}
+      {showBrowser && (
+        <PresetBrowser
+          factoryPresets={presets.factoryPresets}
+          userPresets={presets.userPresets}
+          currentState={state}
+          onLoad={p => setState(p.state as any)}
+          onSave={(name, st, cat) => presets.savePreset(name, st, cat)}
+          onDelete={id => presets.deletePreset(id)}
+          onExport={id => presets.exportPreset(id)}
+          onImport={json => presets.importPreset(json)}
+          onClose={() => setShowBrowser(false)}
+        />
+      )}
+
+      {/* ── Shortcut help overlay ─────────────────────────────────────────── */}
       {showHelp && <ShortcutOverlay onClose={() => setShowHelp(false)} />}
     </div>
   );
@@ -297,16 +353,16 @@ function Dot() {
 // ── Shortcut help ─────────────────────────────────────────────────────────────
 function ShortcutOverlay({ onClose }: { onClose: () => void }) {
   const rows: [string, string][] = [
-    ['Tab / Shift+Tab',      'Cycle through bands'],
-    ['← / →',               'Nudge frequency ×1.05'],
-    ['Shift+← / →',         'Nudge frequency ×1.3'],
-    ['↑ / ↓',               'Nudge gain ±0.5 dB'],
-    ['Shift+↑ / ↓',         'Nudge gain ±3 dB'],
-    ['E',                    'Toggle band on / off'],
-    ['B',                    'Toggle bypass'],
-    ['Ctrl+Z',               'Undo'],
-    ['Ctrl+Y / Ctrl+Shift+Z','Redo'],
-    ['?',                    'Toggle this panel'],
+    ['Tab / Shift+Tab',       'Cycle through bands'],
+    ['← / →',                'Nudge frequency ×1.05'],
+    ['Shift+← / →',          'Nudge frequency ×1.3'],
+    ['↑ / ↓',                'Nudge gain ±0.5 dB'],
+    ['Shift+↑ / ↓',          'Nudge gain ±3 dB'],
+    ['E',                     'Toggle band on / off'],
+    ['B',                     'Toggle bypass'],
+    ['Ctrl+Z',                'Undo'],
+    ['Ctrl+Y / Ctrl+Shift+Z', 'Redo'],
+    ['?',                     'Toggle this panel'],
   ];
 
   return (
