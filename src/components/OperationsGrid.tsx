@@ -7,6 +7,16 @@ import type { EQBand } from '../dsp';
 
 type MiniShape = 'hp' | 'lp' | 'peak-cut' | 'peak-boost' | 'shelf-lo' | 'shelf-hi';
 
+// Spec §2.3 — mini curve paths (32×14 viewBox, midline at y=7)
+const MINI_PATHS: Record<MiniShape, string> = {
+  'hp':         'M0,13 C6,13 10,1 15,1 L32,1',
+  'lp':         'M0,1 L17,1 C22,1 26,13 32,13',
+  'peak-cut':   'M0,7 L9,7 C12,7 13,12 16,12 C19,12 20,7 23,7 L32,7',
+  'peak-boost': 'M0,7 L9,7 C12,7 13,2 16,2 C19,2 20,7 23,7 L32,7',
+  'shelf-lo':   'M0,3 C5,3 8,10 13,10 L32,10',
+  'shelf-hi':   'M0,10 L19,10 C24,10 27,3 32,3',
+};
+
 interface Operation {
   id: string;
   name: string;

@@ -83,37 +83,60 @@ export function App() {
           padding: '10px 24px 10px',
           display: 'flex', alignItems: 'center', gap: 14,
         }}>
-          {/* R3 NATIVE badge — forged metal */}
+          {/* R3 NATIVE badge — spec §2.1: 50px with glow-pulse */}
           <div style={{
-            width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-            background: 'radial-gradient(circle at 35% 35%, #2c2420, #0f0d0a)',
-            border: '1.5px solid rgba(196,134,42,0.5)',
+            width: 50, height: 50, borderRadius: '50%', flexShrink: 0,
+            background: 'radial-gradient(circle at 32% 32%, #3a2e1e 0%, #1a1410 50%, #0f0d0a 100%)',
+            border: '2px solid rgba(196,134,42,0.55)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 10px rgba(196,134,42,0.18), inset 0 1px 0 rgba(255,235,200,0.08)',
+            animation: 'amberPulse 3s ease-in-out infinite',
+            position: 'relative',
           }}>
+            {/* Concentric inner ring — spec §1.1 */}
+            <div style={{
+              position: 'absolute', inset: 4, borderRadius: '50%',
+              border: '1px solid rgba(196,134,42,0.20)',
+              pointerEvents: 'none',
+            }} />
             <span style={{
-              fontSize: 11, fontWeight: 900, color: '#C4862A',
-              letterSpacing: '0.04em',
+              fontSize: 15, fontWeight: 900, color: '#C4862A',
+              letterSpacing: '0.02em',
               fontFamily: 'Bebas Neue, Montserrat, sans-serif',
-              textShadow: '0 0 8px rgba(196,134,42,0.5)',
+              textShadow: '0 0 10px rgba(196,134,42,0.6)',
+              lineHeight: 1,
             }}>R3</span>
           </div>
 
-          {/* Title */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          {/* Title block — spec §2.1 brand-text with underline + attribution */}
+          <div style={{ animation: 'fadeInDown 0.6s ease-out' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+              {/* Brand text + amber underline — spec §2.1 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <div style={{
+                  fontSize: 20, lineHeight: 1,
+                  fontFamily: 'Bebas Neue, Montserrat, sans-serif',
+                  color: '#C4862A',
+                  letterSpacing: '0.08em',
+                  textShadow: '0 0 18px rgba(196,134,42,0.28), 0 1px 2px rgba(0,0,0,0.7)',
+                }}>
+                  EQ MASTERCLASS
+                </div>
+                {/* Amber underline — spec §2.1 "2px solid accent" */}
+                <div style={{
+                  height: 2,
+                  background: 'linear-gradient(to right, rgba(196,134,42,0.8), rgba(196,134,42,0.2), transparent)',
+                  borderRadius: 1,
+                }} />
+              </div>
+              <div style={{ fontSize: 10, color: '#6e6660', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 4 }}>
+                R3 V4
+              </div>
+            </div>
+            {/* Author attribution — spec §2.1 */}
             <div style={{
-              fontSize: 22, lineHeight: 1,
-              fontFamily: 'Bebas Neue, Montserrat, sans-serif',
-              color: '#C4862A',
-              letterSpacing: '0.05em',
-              textShadow: '0 0 20px rgba(196,134,42,0.30), 0 1px 2px rgba(0,0,0,0.7)',
+              fontSize: 10, color: '#7a6e62', fontStyle: 'italic',
+              letterSpacing: '0.06em', marginTop: 2,
             }}>
-              EQ MASTERCLASS
-            </div>
-            <div style={{ fontSize: 10, color: '#6e6660', letterSpacing: '0.14em', fontWeight: 700 }}>
-              R3 V4
-            </div>
-            <div style={{ fontSize: 10, color: '#524c47', fontStyle: 'italic', letterSpacing: '0.02em' }}>
               by DJ Ernesto
             </div>
           </div>
@@ -192,24 +215,47 @@ export function App() {
 
         <ToolsPanel onApply={handleOperation} />
 
-        {/* ── Footer ───────────────────────────────────────────────────── */}
-        <div style={{ marginTop: 72, display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(196,134,42,0.15))' }} />
-          <div style={{ textAlign: 'center', padding: '0 8px' }}>
-            <div style={{
-              fontSize: 18,
-              fontFamily: 'Bebas Neue, Montserrat, sans-serif',
-              color: '#524c47',
-              letterSpacing: '0.24em',
-              textShadow: '0 1px 4px rgba(0,0,0,0.6)',
-            }}>
-              LESS IS MORE. SPACE IS POWER.
-            </div>
-            <div style={{ fontSize: 9, color: '#3c3733', marginTop: 7, letterSpacing: '0.14em', fontWeight: 700 }}>
-              R3 NATIVE · EQ MASTERCLASS · BY DJ ERNESTO
-            </div>
+        {/* ── Footer — spec §2.5 ───────────────────────────────────────── */}
+        <div style={{
+          marginTop: 72,
+          borderTop: '1px solid #242424',
+          borderBottom: '1px solid #242424',
+          padding: '28px 0 26px',
+          textAlign: 'center',
+          position: 'relative',
+        }}>
+          {/* Decorative amber gradient lines — spec §2.5 "140px, transparent→amber→transparent" */}
+          <div style={{
+            position: 'absolute', top: '50%', left: 0,
+            transform: 'translateY(-50%)',
+            width: 140, height: 2, borderRadius: 1,
+            background: 'linear-gradient(to right, transparent, rgba(196,134,42,0.55), transparent)',
+            animation: 'forgeShimmer 3s ease-in-out infinite',
+          }} />
+          <div style={{
+            position: 'absolute', top: '50%', right: 0,
+            transform: 'translateY(-50%)',
+            width: 140, height: 2, borderRadius: 1,
+            background: 'linear-gradient(to left, transparent, rgba(196,134,42,0.55), transparent)',
+            animation: 'forgeShimmer 3s ease-in-out infinite',
+          }} />
+
+          {/* Quote — spec §2.5: Montserrat 16px, weight 600, italic */}
+          <div style={{
+            fontSize: 16, fontStyle: 'italic', fontWeight: 600,
+            fontFamily: 'Montserrat, sans-serif',
+            color: '#6e6660',
+            letterSpacing: '0.06em',
+            lineHeight: 1.6,
+          }}>
+            {/* Amber quote marks — spec §2.5 */}
+            <span style={{ color: '#C4862A', fontSize: 22, opacity: 0.8, marginRight: 6, verticalAlign: 'middle' }}>"</span>
+            LESS IS MORE. SPACE IS POWER.
+            <span style={{ color: '#C4862A', fontSize: 22, opacity: 0.8, marginLeft: 6, verticalAlign: 'middle' }}>"</span>
           </div>
-          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(196,134,42,0.15))' }} />
+          <div style={{ fontSize: 9, color: '#3c3733', marginTop: 10, letterSpacing: '0.16em', fontWeight: 700 }}>
+            R3 NATIVE · EQ MASTERCLASS · BY DJ ERNESTO
+          </div>
         </div>
       </div>
 
@@ -223,16 +269,21 @@ export function App() {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '36px 0 14px' }}>
-      <div style={{ width: 20, height: 1, background: 'rgba(196,134,42,0.35)', flexShrink: 0 }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '36px 0 14px' }}>
+      {/* Spec §2.4 left-border accent — amber, tapered */}
+      <div style={{
+        width: 4, height: 18, flexShrink: 0, borderRadius: 2,
+        background: 'linear-gradient(180deg, rgba(196,134,42,0.9), rgba(196,134,42,0.25))',
+      }} />
       <span style={{
-        fontSize: 11, fontWeight: 800, color: '#6e6660',
+        fontSize: 11, fontWeight: 800, color: '#7a7068',
         letterSpacing: '0.24em', whiteSpace: 'nowrap',
         fontFamily: 'Bebas Neue, Montserrat, sans-serif',
+        textTransform: 'uppercase',
       }}>{children}</span>
       <div style={{
         flex: 1, height: 1,
-        background: 'linear-gradient(to right, rgba(196,134,42,0.12), transparent)',
+        background: 'linear-gradient(to right, rgba(196,134,42,0.18), transparent)',
       }} />
     </div>
   );
@@ -367,6 +418,7 @@ function ProTipsAccordion() {
   return (
     <div style={{
       border: '1px solid #2c2825',
+      borderLeft: '4px solid rgba(196,134,42,0.55)',  /* spec §2.4 left-border accent */
       borderRadius: 8,
       overflow: 'hidden',
       background: 'linear-gradient(180deg,#141210 0%,#0f0d0a 100%)',

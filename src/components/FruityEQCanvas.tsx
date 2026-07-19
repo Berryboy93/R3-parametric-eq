@@ -170,14 +170,27 @@ export function FruityEQCanvas({
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    // Curve stroke — forge glow
+    // Curve stroke — spec §2.2: 3px + double-glow (outer soft + inner bright)
+    // Pass 1: wide outer glow
+    ctx.save();
+    buildPath();
+    ctx.strokeStyle = '#C4862A';
+    ctx.lineWidth   = bypass ? 2 : 6;
+    ctx.globalAlpha = bypass ? 0.08 : 0.22;
+    ctx.shadowColor = '#C4862A';
+    ctx.shadowBlur  = bypass ? 6 : 18;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur  = 0;
+    ctx.restore();
+    // Pass 2: crisp inner stroke
     ctx.save();
     buildPath();
     ctx.strokeStyle = makeGrad();
-    ctx.lineWidth   = bypass ? 1.5 : 2.5;
+    ctx.lineWidth   = bypass ? 1.5 : 3;
     ctx.globalAlpha = bypass ? 0.3 : 1;
-    ctx.shadowColor = '#C4862A';
-    ctx.shadowBlur  = bypass ? 4 : 10;
+    ctx.shadowColor = '#D4A040';
+    ctx.shadowBlur  = bypass ? 3 : 8;
     ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.shadowBlur  = 0;
