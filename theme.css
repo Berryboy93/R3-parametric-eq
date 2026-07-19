@@ -1,0 +1,186 @@
+/**
+ * @r3/ui/styles/theme
+ * R3 NATIVE Parametric EQ Theme
+ * Midnight Black + Neon Native Green
+ */
+
+:root {
+  /* R3 NATIVE Color Palette */
+  --r3-color-background: #080808;
+  --r3-color-panel: #242424;
+  --r3-color-panel-hover: #2d2d2d;
+  --r3-color-primary: #B7FF00;
+  --r3-color-primary-dark: #99CC00;
+  --r3-color-text: #E6E6E6;
+  --r3-color-text-secondary: #999999;
+  --r3-color-text-muted: #666666;
+  --r3-color-border: #404040;
+  --r3-color-border-light: rgba(255, 255, 255, 0.1);
+
+  /* Spectrum Gradient */
+  --r3-spectrum-gradient: linear-gradient(
+    90deg,
+    #0066ff 0%,
+    #00ff00 25%,
+    #ffff00 50%,
+    #ff6600 75%,
+    #ff0000 100%
+  );
+
+  /* Typography */
+  --r3-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --r3-font-family-mono: 'Fira Code', 'Monaco', 'Courier New', monospace;
+  --r3-font-size-xs: 0.75rem;
+  --r3-font-size-sm: 0.875rem;
+  --r3-font-size-base: 1rem;
+  --r3-font-size-lg: 1.125rem;
+  --r3-font-size-xl: 1.25rem;
+
+  /* Spacing */
+  --r3-spacing-xs: 0.25rem;
+  --r3-spacing-sm: 0.5rem;
+  --r3-spacing-md: 1rem;
+  --r3-spacing-lg: 1.5rem;
+  --r3-spacing-xl: 2rem;
+
+  /* Border Radius */
+  --r3-radius-sm: 4px;
+  --r3-radius-md: 8px;
+  --r3-radius-lg: 12px;
+  --r3-radius-xl: 16px;
+
+  /* Transitions */
+  --r3-transition-fast: 100ms ease-out;
+  --r3-transition-base: 200ms ease-out;
+  --r3-transition-slow: 300ms ease-out;
+
+  /* Shadows */
+  --r3-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --r3-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --r3-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.6);
+  --r3-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.7);
+  --r3-shadow-glow: 0 0 12px rgba(183, 255, 0, 0.3);
+
+  /* Z-Index Scale */
+  --r3-z-dropdown: 100;
+  --r3-z-modal: 200;
+  --r3-z-tooltip: 300;
+}
+
+/* Reset & Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--r3-color-background);
+  color: var(--r3-color-text);
+  font-family: var(--r3-font-family);
+  font-size: var(--r3-font-size-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: var(--r3-font-size-xl);
+}
+
+h2 {
+  font-size: var(--r3-font-size-lg);
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Utility Classes */
+.r3-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.r3-text-primary {
+  color: var(--r3-color-primary);
+}
+
+.r3-text-secondary {
+  color: var(--r3-color-text-secondary);
+}
+
+.r3-text-muted {
+  color: var(--r3-color-text-muted);
+}
+
+/* Focus Visible Styles */
+:focus-visible {
+  outline: 2px solid var(--r3-color-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--r3-color-primary);
+  outline-offset: 0;
+}
+
+/* Disabled States */
+button:disabled,
+input:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--r3-color-primary);
+  color: var(--r3-color-background);
+}
+
+::-moz-selection {
+  background-color: var(--r3-color-primary);
+  color: var(--r3-color-background);
+}
