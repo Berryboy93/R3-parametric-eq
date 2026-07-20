@@ -7,8 +7,8 @@ import { useRef, useEffect, useCallback } from 'react';
 import type { FrequencyResponsePoint, EQBand } from '../dsp';
 
 const BAND_COLORS = [
-  '#4FC3F7', '#81C784', '#FFB74D', '#F06292',
-  '#BA68C8', '#4DB6AC', '#FFD54F', '#90A4AE',
+  '#B7FF00', '#A8E600', '#C4FF1A', '#B0FF00',
+  '#D4FF33', '#99CC00', '#CCFF00', '#7FFF00',
 ];
 
 const FREQ_LABELS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];

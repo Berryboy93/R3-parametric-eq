@@ -74,84 +74,119 @@ export function App() {
 
       {/* ── Masthead ──────────────────────────────────────────────────────── */}
       <div style={{
-        background: '#111111',
+        background: 'linear-gradient(135deg, #080808 0%, #0F1219 100%)',
         borderBottom: '1px solid #242424',
         boxShadow: '0 2px 12px rgba(0,0,0,0.6)',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
+        {/* Studio background texture */}
+        <div style={{
+          position: 'absolute', right: 0, top: 0,
+          width: '40%', height: '100%',
+          background: 'linear-gradient(to left, rgba(183,255,0,0.03), transparent)',
+          pointerEvents: 'none',
+        }} />
+
         <div style={{
           maxWidth: 1024, margin: '0 auto',
-          padding: '10px 24px 10px',
-          display: 'flex', alignItems: 'center', gap: 14,
+          padding: '20px 24px 18px',
+          display: 'flex', alignItems: 'center', gap: 18,
+          position: 'relative', zIndex: 1,
         }}>
           {/* R3 NATIVE badge */}
           <div style={{
-            width: 50, height: 50, borderRadius: '50%', flexShrink: 0,
+            width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
             background: 'radial-gradient(circle at 32% 32%, #1a2800 0%, #0d1400 50%, #080808 100%)',
-            border: '2px solid rgba(183,255,0,0.55)',
+            border: '2px solid rgba(183,255,0,0.6)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'greenPulse 3s ease-in-out infinite',
             position: 'relative',
+            boxShadow: '0 0 16px rgba(183,255,0,0.20)',
           }}>
+            {/* Music note icon */}
+            <span style={{ fontSize: 18, lineHeight: 1 }}>♪</span>
             {/* Concentric inner ring */}
             <div style={{
               position: 'absolute', inset: 4, borderRadius: '50%',
-              border: '1px solid rgba(183,255,0,0.18)',
+              border: '1px solid rgba(183,255,0,0.20)',
               pointerEvents: 'none',
             }} />
             <span style={{
-              fontSize: 15, fontWeight: 900, color: '#B7FF00',
+              position: 'absolute',
+              fontSize: 11, fontWeight: 900, color: '#B7FF00',
               letterSpacing: '0.02em',
               fontFamily: 'Bebas Neue, Montserrat, sans-serif',
               textShadow: '0 0 10px rgba(183,255,0,0.7)',
               lineHeight: 1,
+              bottom: 8,
             }}>R3</span>
           </div>
 
           {/* Title block */}
-          <div style={{ animation: 'fadeInDown 0.6s ease-out' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <div style={{
-                  fontSize: 20, lineHeight: 1,
-                  fontFamily: 'Bebas Neue, Montserrat, sans-serif',
-                  color: '#B7FF00',
-                  letterSpacing: '0.08em',
-                  textShadow: '0 0 18px rgba(183,255,0,0.30), 0 1px 2px rgba(0,0,0,0.7)',
-                }}>
-                  EQ MASTERCLASS
-                </div>
-                {/* Neon green underline */}
-                <div style={{
-                  height: 2,
-                  background: 'linear-gradient(to right, rgba(183,255,0,0.8), rgba(183,255,0,0.2), transparent)',
-                  borderRadius: 1,
-                }} />
-              </div>
-              <div style={{ fontSize: 10, color: '#505050', letterSpacing: '0.14em', fontWeight: 700, marginBottom: 4 }}>
-                R3 V4
-              </div>
+          <div style={{ flex: 1, animation: 'fadeInDown 0.6s ease-out' }}>
+            {/* Brand label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 700,
+                fontFamily: 'Bebas Neue, Montserrat, sans-serif',
+                color: '#B7FF00',
+                letterSpacing: '0.22em',
+                borderBottom: '2px solid #B7FF00',
+                paddingBottom: 2,
+                textTransform: 'uppercase',
+              }}>R3 V4 NATIVE</span>
+              <span style={{ fontSize: 9, color: '#404040', letterSpacing: '0.14em', fontWeight: 700 }}>
+                LOOPSTATION MASTERCLASS
+              </span>
             </div>
+
+            {/* Main heading */}
             <div style={{
-              fontSize: 10, color: '#606060', fontStyle: 'italic',
-              letterSpacing: '0.06em', marginTop: 2,
+              fontSize: 28, lineHeight: 1,
+              fontFamily: 'Bebas Neue, Montserrat, sans-serif',
+              color: '#FFFFFF',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+            }}>
+              EQ MASTERCLASS
+            </div>
+
+            {/* Tagline */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginTop: 4,
+            }}>
+              <span style={{
+                fontSize: 11, color: '#B7B7C0',
+                fontFamily: 'Montserrat, sans-serif',
+                letterSpacing: '0.04em',
+              }}>EQ Mixing Guide</span>
+              <span style={{ color: '#2a2a2a', fontSize: 10 }}>·</span>
+              <span style={{
+                fontSize: 11, color: '#B7FF00', opacity: 0.85,
+                fontFamily: 'Montserrat, sans-serif',
+              }}>Perfect your sound.</span>
+            </div>
+
+            {/* Attribution */}
+            <div style={{
+              fontSize: 11, color: '#B7FF00', opacity: 0.7,
+              fontStyle: 'italic', fontWeight: 600,
+              letterSpacing: '0.06em', marginTop: 3,
+              fontFamily: 'Montserrat, sans-serif',
             }}>
               by DJ Ernesto
             </div>
           </div>
 
-          {/* Divider line */}
-          <div style={{
-            flex: 1, height: 1,
-            background: 'linear-gradient(to right, rgba(183,255,0,0.15), transparent)',
-          }} />
-
           {/* Slot pill */}
           <div style={{
-            padding: '3px 10px', borderRadius: 3,
-            border: '1px solid rgba(183,255,0,0.22)',
+            padding: '4px 12px', borderRadius: 4,
+            border: '1px solid rgba(183,255,0,0.25)',
             background: '#141414',
-            fontSize: 9, fontWeight: 800, color: 'rgba(183,255,0,0.55)',
+            fontSize: 9, fontWeight: 800, color: 'rgba(183,255,0,0.6)',
             letterSpacing: '0.14em', flexShrink: 0,
+            boxShadow: '0 0 8px rgba(183,255,0,0.08)',
           }}>
             SLOT {activeSlot}
           </div>
@@ -244,15 +279,15 @@ export function App() {
           <div style={{
             fontSize: 16, fontStyle: 'italic', fontWeight: 600,
             fontFamily: 'Montserrat, sans-serif',
-            color: '#505050',
+            color: '#FFFFFF',
             letterSpacing: '0.06em',
             lineHeight: 1.6,
           }}>
-            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.7, marginRight: 6, verticalAlign: 'middle' }}>"</span>
+            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.8, marginRight: 6, verticalAlign: 'middle' }}>"</span>
             LESS IS MORE. SPACE IS POWER.
-            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.7, marginLeft: 6, verticalAlign: 'middle' }}>"</span>
+            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.8, marginLeft: 6, verticalAlign: 'middle' }}>"</span>
           </div>
-          <div style={{ fontSize: 9, color: '#2e2e2e', marginTop: 10, letterSpacing: '0.16em', fontWeight: 700 }}>
+          <div style={{ fontSize: 9, color: '#505050', marginTop: 10, letterSpacing: '0.16em', fontWeight: 700 }}>
             R3 NATIVE · EQ MASTERCLASS · BY DJ ERNESTO
           </div>
         </div>
@@ -275,7 +310,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
         background: 'linear-gradient(180deg, rgba(183,255,0,0.9), rgba(183,255,0,0.25))',
       }} />
       <span style={{
-        fontSize: 11, fontWeight: 800, color: '#505050',
+        fontSize: 11, fontWeight: 800, color: '#707070',
         letterSpacing: '0.24em', whiteSpace: 'nowrap',
         fontFamily: 'Bebas Neue, Montserrat, sans-serif',
         textTransform: 'uppercase',
@@ -371,122 +406,92 @@ function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./d
           padding: '16px 16px 18px',
         }}>
           {activeTab === 'ops' && <OperationsGrid onApply={onApply} />}
-          {activeTab === 'tips' && <ProTipsAccordion />}
+          {activeTab === 'tips' && <ProTipsPanel />}
         </div>
       )}
     </div>
   );
 }
 
-// ── Pro Tips Accordion ─────────────────────────────────────────────────────────
+// ── Pro Tips ───────────────────────────────────────────────────────────────────
 
-const PRO_TIPS = [
+const PRO_TIPS_DATA = [
   {
-    title: 'Surgical cuts, broad boosts',
-    content: 'When cutting frequencies, use a narrow Q (high value) to surgically remove problem areas. When boosting, use a wide Q (low value) for a natural, musical sound. Narrow boosts can sound unnatural and harsh.',
-    related: ['Q control', 'Peaking filter'],
+    icon: '✂',
+    title: 'CUT BEFORE BOOSTING',
+    content: 'Always cut problem frequencies before boosting others. Subtractive EQ creates cleaner mixes.',
   },
   {
-    title: 'Always cut before you boost',
-    content: 'Before adding gain anywhere, first try removing what\'s causing the problem. A 3 dB cut in the mud range (200–400 Hz) will make your highs sound brighter without adding any brightness at all.',
-    related: ['Gain staging', 'Low-mid clarity'],
+    icon: '≈',
+    title: 'SMALL MOVES',
+    content: 'Keep EQ moves under ±3 dB for a natural sound. Subtle corrections are more musical than drastic cuts.',
   },
   {
-    title: 'High-pass everything (almost)',
-    content: 'Apply a high-pass filter at 80 Hz or higher on most non-bass elements. Sub-bass frequencies on instruments like guitars or vocals add mud and waste headroom. Your mix will instantly sound cleaner and louder.',
-    related: ['High Pass filter', 'Headroom'],
-  },
-  {
-    title: 'The 3 kHz presence bump',
-    content: 'Human hearing is most sensitive around 3–5 kHz. A gentle +2 to +3 dB boost here adds intelligibility and cut-through in a dense mix. It\'s why telephone audio sounds "present" even at low volumes.',
-    related: ['Presence', 'Vocal clarity'],
-  },
-  {
-    title: 'Reference on loop',
-    content: 'Always compare your EQ\'d signal to the unprocessed original using the Bypass toggle. Our ears adapt to changes within seconds — bypass regularly to ensure you\'re actually improving the sound, not just making it different.',
-    related: ['A/B comparison', 'Bypass'],
+    icon: '◉',
+    title: 'TRUST YOUR EARS',
+    content: 'Reference your EQ against the bypassed signal regularly. Your ears adapt — bypass often to stay honest.',
   },
 ];
 
-function ProTipsAccordion() {
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
-
+function ProTipsPanel() {
   return (
     <div style={{
-      border: '1px solid #2a2a2a',
-      borderLeft: '3px solid rgba(183,255,0,0.45)',
+      background: 'linear-gradient(135deg, #1A2535 0%, #0F1219 100%)',
+      border: '1px solid #242424',
+      borderLeft: '6px solid #B7FF00',
       borderRadius: 8,
-      overflow: 'hidden',
-      background: '#141414',
+      padding: '20px 24px',
+      position: 'relative',
     }}>
-      {PRO_TIPS.map((tip, idx) => {
-        const open = openIdx === idx;
-        return (
-          <div key={idx} style={{ borderBottom: idx < PRO_TIPS.length - 1 ? '1px solid #1e1e1e' : 'none' }}>
-            <button
-              onClick={() => setOpenIdx(open ? null : idx)}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                padding: '11px 16px', background: 'none', border: 'none',
-                cursor: 'pointer', textAlign: 'left',
-              }}
-            >
-              {/* Number badge */}
-              <span style={{
-                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                background: open
-                  ? 'radial-gradient(circle at 35% 35%, #d4ff40cc, #B7FF0066)'
-                  : '#242424',
-                border: `1px solid ${open ? 'rgba(183,255,0,0.55)' : '#3a3a3a'}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 9, fontWeight: 800,
-                color: open ? '#080808' : '#606060',
-                boxShadow: open ? '0 0 8px rgba(183,255,0,0.30)' : 'none',
-                transition: 'all 200ms',
-              }}>{idx + 1}</span>
+      {/* PRO TIPS label */}
+      <div style={{
+        fontSize: 10, fontWeight: 800, color: '#B7FF00',
+        letterSpacing: '0.18em', marginBottom: 16,
+        fontFamily: 'Bebas Neue, Montserrat, sans-serif',
+        textTransform: 'uppercase',
+      }}>PRO TIPS</div>
 
-              <span style={{
-                fontSize: 12, fontWeight: 700,
-                color: open ? '#E6E6E6' : '#909090',
-                letterSpacing: '0.04em',
-                transition: 'color 200ms',
-              }}>{tip.title}</span>
+      <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+        {PRO_TIPS_DATA.map((tip, i) => (
+          <div key={i} style={{
+            flex: '1 1 160px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            textAlign: 'center', gap: 8,
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: 36, height: 36,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 20, color: '#B7FF00',
+              filter: 'drop-shadow(0 0 6px rgba(183,255,0,0.4))',
+            }}>{tip.icon}</div>
 
-              <span style={{
-                marginLeft: 'auto', fontSize: 11,
-                color: open ? '#B7FF00' : '#3a3a3a',
-                transition: 'all 200ms',
-                transform: open ? 'rotate(180deg)' : 'rotate(0)',
-                display: 'inline-block',
-              }}>▾</span>
-            </button>
+            {/* Title */}
+            <div style={{
+              fontSize: 11, fontWeight: 800, color: '#B7FF00',
+              letterSpacing: '0.06em',
+              fontFamily: 'Bebas Neue, Montserrat, sans-serif',
+              textTransform: 'uppercase',
+            }}>{tip.title}</div>
 
-            {open && (
-              <div style={{
-                borderTop: '1px solid #1e1e1e',
-                padding: '12px 16px 14px 48px',
-              }}>
-                <p style={{
-                  fontSize: 12, lineHeight: 1.65,
-                  color: '#808080',
-                  marginBottom: 10,
-                }}>{tip.content}</p>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 9, color: '#484848', letterSpacing: '0.06em' }}>Related:</span>
-                  {tip.related.map(tag => (
-                    <span key={tag} style={{
-                      fontSize: 9, padding: '2px 7px', borderRadius: 3,
-                      background: '#1a1a1a',
-                      border: '1px solid #2e2e2e',
-                      color: '#606060', letterSpacing: '0.04em',
-                    }}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Description */}
+            <div style={{
+              fontSize: 11, color: '#FFFFFF', lineHeight: 1.5,
+              fontFamily: 'Montserrat, sans-serif',
+              opacity: 0.85,
+            }}>{tip.content}</div>
           </div>
-        );
-      })}
+        ))}
+      </div>
+
+      {/* DJ Ernesto signature */}
+      <div style={{
+        textAlign: 'right', marginTop: 16,
+        fontSize: 12, color: '#B7FF00', opacity: 0.6,
+        fontStyle: 'italic', fontWeight: 600,
+        fontFamily: 'Montserrat, sans-serif',
+        letterSpacing: '0.04em',
+      }}>— DJ Ernesto</div>
     </div>
   );
 }
