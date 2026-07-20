@@ -85,6 +85,30 @@ function sortByNewest(records: RecentFileMeta[]): RecentFileMeta[] {
 // ── Public API ─────────────────────────────────────────────────────────────────
 
 /**
+ * Check whether IndexedDB is accessible.
+ * Returns null when storage is available, or a human-readable error string
+ * when it is blocked (e.g. Private Browsing, strict storage permissions).
+ *
+ * Callers should surface this string so users understand why file history is
+ * absent rather than silently seeing an empty list.
+ */
+export async function checkDbAvailability(): Promise<string | null> {
+  if (typeof indexedDB === 'undefined') {
+    return 'File history is unavailable in this browser';
+  }
+  try {
+    const db = await openDb();
+    db.close();
+    return null;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'SecurityError') {
+      return 'File history is unavailable in Private Browsing';
+    }
+    return 'File history is unavailable — storage access was blocked';
+  }
+}
+
+/**
  * Add a file to the recent list.
  * Evicts the oldest entry when more than MAX_ENTRIES would be stored.
  * Returns `null` on success, or an error string.

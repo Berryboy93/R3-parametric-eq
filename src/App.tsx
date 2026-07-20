@@ -44,6 +44,7 @@ export function App() {
     cacheError, setCacheError,
     clearCachedFile, fileFromCache,
     recentFiles, removeRecentFileById,
+    historyError,
   } = useAudioEngine(state.bands, state.bypass);
 
   useKeyboardShortcuts({
@@ -256,6 +257,7 @@ export function App() {
           cacheError={cacheError}
           onClearCacheError={() => setCacheError(null)}
           recentFiles={recentFiles}
+          historyError={historyError}
           onLoadRecentFile={loadRecentFile}
           onRemoveRecentFile={removeRecentFileById}
           bypass={state.bypass}

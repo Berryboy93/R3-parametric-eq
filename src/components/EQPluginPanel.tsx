@@ -50,6 +50,7 @@ export interface EQPluginPanelProps {
   cacheError: string | null;
   onClearCacheError: () => void;
   recentFiles: RecentFileMeta[];
+  historyError: string | null;
   onLoadRecentFile: (id: string) => Promise<void>;
   onRemoveRecentFile: (id: string) => Promise<void>;
   bypass: boolean;
@@ -97,7 +98,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
     state, curve, selectedBand, onSelectBand, onBandDrag, onBandUpdate, spectrumData,
     isPlaying, onPlay, onStop, sourceMode, onSourceMode, onSwitchSource, sourceError, onClearError,
     loadFile, fileReady, fileName, fileFromCache, onClearCachedFile, cacheError, onClearCacheError,
-    recentFiles, onLoadRecentFile, onRemoveRecentFile,
+    recentFiles, historyError, onLoadRecentFile, onRemoveRecentFile,
     bypass, onToggleBypass, canUndo, canRedo, onUndo, onRedo, onReset, onOpenPresets, onShowHelp,
     activeSlot, onCaptureSlot, onToggleAB, onAIApply,
     fileDuration, fileCurrentTime, onSeek,
@@ -262,8 +263,25 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             </>
           )}
 
-          {/* ── Recent files dropdown ── */}
-          {recentFiles.length > 0 && (
+          {/* ── Recent files dropdown / history-unavailable indicator ── */}
+          {historyError ? (
+            <button
+              disabled
+              title={historyError}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 2,
+                padding: '4px 7px', borderRadius: 4,
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
+                background: '#1a1a1a',
+                border: '1px solid #2a2a2a',
+                color: '#404040',
+                cursor: 'default',
+                opacity: 0.6,
+              }}
+            >
+              🕐
+            </button>
+          ) : recentFiles.length > 0 && (
             <div ref={recentsAnchor} style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowRecents(v => !v)}

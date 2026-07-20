@@ -10,6 +10,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { EQBand, FilterType } from '../dsp';
 import {
   addRecentFile,
+  checkDbAvailability,
   clearAllRecentFiles,
   listRecentFiles,
   loadRecentFileById,
@@ -94,6 +95,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   const [cacheError,     setCacheError]     = useState<string | null>(null);
   const [fileFromCache,  setFileFromCache]  = useState(false);
   const [recentFiles,    setRecentFiles]    = useState<RecentFileMeta[]>([]);
+  const [historyError,   setHistoryError]   = useState<string | null>(null);
 
   // Track the id of the currently active recent file (for highlighting in the list)
   const activeRecentIdRef = useRef<string | null>(null);
@@ -270,6 +272,16 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
       // Ask the browser to protect this origin's storage as early as possible.
       // The module-level flag in useAudioFileCache ensures it fires at most once.
       requestPersistentStorage();
+
+      // Check DB availability before loading — surfaces a clear message when
+      // IndexedDB is blocked (Private Browsing, strict storage permissions) so
+      // users understand why the history list is empty rather than just seeing
+      // a blank panel with no explanation.
+      const dbErr = await checkDbAvailability();
+      if (dbErr) {
+        if (!cancelled) setHistoryError(dbErr);
+        return;
+      }
 
       // Load the list first so the popover is populated even if decode fails
       const list = await listRecentFiles();
@@ -506,6 +518,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     cacheError, setCacheError,
     clearCachedFile, fileFromCache,
     recentFiles, removeRecentFileById,
+    historyError,
   };
 }
 
