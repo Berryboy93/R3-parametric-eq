@@ -15,6 +15,8 @@ export function usePresetManager() {
   const [initialized, setInitialized] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const retryingRef = useRef(false);
 
   const manager = managerRef.current;
 
@@ -91,6 +93,9 @@ export function usePresetManager() {
   );
 
   const retryLoad = useCallback(async () => {
+    if (retryingRef.current) return;
+    retryingRef.current = true;
+    setIsRetrying(true);
     setLoadError(null);
     try {
       await manager.init();
@@ -98,6 +103,9 @@ export function usePresetManager() {
       setLoadError(null);
     } catch {
       setLoadError('Still could not load presets — check your connection and try again.');
+    } finally {
+      retryingRef.current = false;
+      setIsRetrying(false);
     }
   }, [manager]);
 
@@ -118,6 +126,7 @@ export function usePresetManager() {
     manager,
     loadError,
     saveError,
+    isRetrying,
     retryLoad,
     dismissLoadError,
     dismissSaveError,

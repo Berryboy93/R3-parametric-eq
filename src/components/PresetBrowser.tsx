@@ -23,6 +23,8 @@ interface Props {
   onDismissLoadError?: () => void;
   onDismissSaveError?: () => void;
   onRetryLoad?: () => void;
+  /** True while a retry is in-flight — disables the RETRY button */
+  isRetrying?: boolean;
 }
 
 const CATEGORY_ORDER = ['All', 'Reference', 'Vocal', 'Voice', 'Music', 'Mastering', 'Instrument', 'Custom'];
@@ -30,7 +32,7 @@ const CATEGORY_ORDER = ['All', 'Reference', 'Vocal', 'Voice', 'Music', 'Masterin
 export function PresetBrowser({
   factoryPresets, userPresets, currentState,
   onLoad, onSave, onDelete, onExport, onImport, onClose,
-  loadError, saveError, onDismissLoadError, onDismissSaveError, onRetryLoad,
+  loadError, saveError, onDismissLoadError, onDismissSaveError, onRetryLoad, isRetrying,
 }: Props) {
   const [search,       setSearch]       = useState('');
   const [category,     setCategory]     = useState('All');
@@ -119,14 +121,18 @@ export function PresetBrowser({
             {onRetryLoad && (
               <button
                 onClick={onRetryLoad}
+                disabled={isRetrying}
                 title="Retry loading presets"
                 style={{
                   background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.40)',
-                  color: '#ef4444', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
-                  cursor: 'pointer', padding: '3px 9px', borderRadius: 4,
+                  color: isRetrying ? 'rgba(239,68,68,0.45)' : '#ef4444',
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                  cursor: isRetrying ? 'not-allowed' : 'pointer',
+                  padding: '3px 9px', borderRadius: 4,
                   fontFamily: 'Montserrat, sans-serif',
+                  opacity: isRetrying ? 0.6 : 1,
                 }}
-              >RETRY</button>
+              >{isRetrying ? 'RETRYING…' : 'RETRY'}</button>
             )}
             <button
               onClick={onDismissLoadError}

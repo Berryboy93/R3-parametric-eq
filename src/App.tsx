@@ -228,6 +228,7 @@ export function App() {
             onDismissLoadError={presets.dismissLoadError}
             onDismissSaveError={presets.dismissSaveError}
             onRetryLoad={presets.retryLoad}
+            isRetrying={presets.isRetrying}
           />
         )}
 
