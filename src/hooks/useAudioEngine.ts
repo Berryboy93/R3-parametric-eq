@@ -212,9 +212,12 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     analyser.smoothingTimeConstant = 0.75;
     analyserRef.current = analyser;
 
-    // Output gain
+    // Output gain — start silent and fade in over 150 ms to prevent clicks
+    const targetGain = mode === 'microphone' ? 0.85 : 0.45;
     const gainNode = ctx.createGain();
-    gainNode.gain.value = mode === 'microphone' ? 0.85 : 0.45;
+    gainNode.gain.value = 0;
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.15);
     gainRef.current = gainNode;
 
     // Wire helper: sourceNode → filters → analyser → gain → destination
@@ -312,6 +315,53 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     startedAtRef.current = ctx.currentTime;
     src.start(0, newOffset);
   }, []);
+
+  // ── Switch source with fade-out / fade-in ────────────────────────────────────
+  // Fades out current audio (150 ms), tears down the chain, updates the source
+  // mode, then immediately restarts playback — no manual PLAY press needed.
+  const switchSource = useCallback(async (mode: AudioSourceMode) => {
+    setSourceError(null);
+
+    if (playingRef.current && gainRef.current && ctxRef.current) {
+      // Fade out over 150 ms
+      const gain = gainRef.current;
+      const ctx  = ctxRef.current;
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+      // Wait for the ramp to finish before tearing down
+      await new Promise<void>(r => setTimeout(r, 165));
+    }
+
+    // Tear down current chain (stop() sets isPlaying false, clears all refs)
+    // We call the imperative version directly to avoid a stale closure.
+    cancelAnimationFrame(rafRef.current);
+    playingRef.current = false;
+    try { bufSrcRef.current?.stop(); } catch {}
+    bufSrcRef.current?.disconnect();
+    bufSrcRef.current = null;
+    streamSrcRef.current?.disconnect();
+    streamSrcRef.current = null;
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    filtersRef.current.forEach(f => f.disconnect());
+    analyserRef.current?.disconnect();
+    gainRef.current?.disconnect();
+    filtersRef.current  = [];
+    analyserRef.current = null;
+    gainRef.current     = null;
+
+    // Update the ref immediately so the upcoming play() call sees the new mode
+    sourceModeRef.current = mode;
+    setSourceMode(mode);
+    setIsPlaying(false);
+    setSpectrum(null);
+
+    // Auto-restart with the new source
+    await play();
+  // play / stop are stable callbacks; including them avoids stale closure warnings
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [play, setSourceMode]);
 
   // ── Stop ─────────────────────────────────────────────────────────────────────
   const stop = useCallback(() => {

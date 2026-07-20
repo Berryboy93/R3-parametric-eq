@@ -65,10 +65,16 @@ export function App() {
     updateBand(bandId, update);
   }, [updateBand]);
 
-  // switchSource handles stop + mode update + optional auto-restart atomically
+  // switchSource handles fade-out → teardown → mode update → fade-in atomically
   const handleSourceMode = useCallback((mode: AudioSourceMode) => {
-    switchSource(mode);
-  }, [switchSource]);
+    setSourceError(null);
+    if (isPlaying) {
+      // Seamlessly cross-fade to the new source — no manual PLAY required
+      switchSource(mode);
+    } else {
+      setSourceMode(mode);
+    }
+  }, [isPlaying, switchSource, setSourceMode, setSourceError]);
 
   const handleClearCachedFile = useCallback(async () => {
     if (isPlaying) stop();
