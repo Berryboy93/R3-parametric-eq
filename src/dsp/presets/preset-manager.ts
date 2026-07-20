@@ -207,12 +207,12 @@ export class PresetManager {
     }
   }
 
-  createPreset(name: string, state: EQState, category = 'Custom', description = '', tags: string[] = []): EQPreset {
+  async createPreset(name: string, state: EQState, category = 'Custom', description = '', tags: string[] = []): Promise<EQPreset> {
     const id = this._genId(name);
     const now = Date.now();
     const preset: EQPreset = { id, name: name.slice(0, 100), category, description: description.slice(0, 500), tags: tags.slice(0, 20), state, isFactory: false, createdAt: now, updatedAt: now };
     this.presets.set(id, preset);
-    this.storage.savePreset(preset);
+    await this.storage.savePreset(preset);
     return preset;
   }
 
@@ -223,11 +223,18 @@ export class PresetManager {
   getPresetsByCategory(cat: string): EQPreset[] { return this.getAllPresets().filter(p => p.category === cat); }
   getCategories(): string[] { return [...new Set(this.getAllPresets().map(p => p.category))].sort(); }
 
-  deletePreset(id: string): boolean {
+  async deletePreset(id: string): Promise<boolean> {
     const p = this.presets.get(id);
     if (!p || p.isFactory) return false;
+    // Remove from memory optimistically, but restore if the storage call throws
     this.presets.delete(id);
-    this.storage.deletePreset(id);
+    try {
+      await this.storage.deletePreset(id);
+    } catch (err) {
+      // Rollback: preset stays safe in memory
+      this.presets.set(id, p);
+      throw err;
+    }
     return true;
   }
 
@@ -245,16 +252,25 @@ export class PresetManager {
     return p ? JSON.stringify(p, null, 2) : null;
   }
 
-  importPreset(json: string): { preset: EQPreset | null; errors: string[] } {
+  async importPreset(json: string): Promise<{ preset: EQPreset | null; errors: string[] }> {
+    let obj: unknown;
     try {
-      const obj = JSON.parse(json) as unknown;
-      const v = validatePreset(obj);
-      if (!v.valid) return { preset: null, errors: v.errors };
-      const p = { ...(obj as EQPreset), isFactory: false, updatedAt: Date.now() };
-      this.presets.set(p.id, p);
-      this.storage.savePreset(p);
-      return { preset: p, errors: [] };
-    } catch { return { preset: null, errors: ['Invalid JSON'] }; }
+      obj = JSON.parse(json);
+    } catch {
+      return { preset: null, errors: ['Invalid JSON'] };
+    }
+    const v = validatePreset(obj);
+    if (!v.valid) return { preset: null, errors: v.errors };
+    const p = { ...(obj as EQPreset), isFactory: false, updatedAt: Date.now() };
+    this.presets.set(p.id, p);
+    try {
+      await this.storage.savePreset(p);
+    } catch (err) {
+      // Rollback in-memory add so state stays consistent with backend
+      this.presets.delete(p.id);
+      throw err;
+    }
+    return { preset: p, errors: [] };
   }
 
   getPresetMetadata(): PresetMetadata[] {

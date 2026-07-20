@@ -216,11 +216,15 @@ export function App() {
             userPresets={presets.userPresets}
             currentState={state}
             onLoad={p => { setState(p.state); setShowBrowser(false); }}
-            onSave={(name, st, cat) => { presets.savePreset(name, st, cat); setShowBrowser(false); }}
+            onSave={async (name, st, cat) => { const p = await presets.savePreset(name, st, cat); if (p) setShowBrowser(false); }}
             onDelete={id => presets.deletePreset(id)}
             onExport={id => presets.exportPreset(id)}
             onImport={json => presets.importPreset(json)}
             onClose={() => setShowBrowser(false)}
+            loadError={presets.loadError}
+            saveError={presets.saveError}
+            onDismissLoadError={presets.dismissLoadError}
+            onDismissSaveError={presets.dismissSaveError}
           />
         )}
 

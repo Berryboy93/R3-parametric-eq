@@ -14,8 +14,14 @@ interface Props {
   onSave: (name: string, state: EQState, category: string) => void;
   onDelete: (id: string) => void;
   onExport: (id: string) => void;
-  onImport: (json: string) => { preset: EQPreset | null; errors: string[] };
+  onImport: (json: string) => Promise<{ preset: EQPreset | null; errors: string[] }>;
   onClose: () => void;
+  /** Dismissible banner shown when the preset list could not be loaded */
+  loadError?: string | null;
+  /** Inline error shown when a save or delete operation fails */
+  saveError?: string | null;
+  onDismissLoadError?: () => void;
+  onDismissSaveError?: () => void;
 }
 
 const CATEGORY_ORDER = ['All', 'Reference', 'Vocal', 'Voice', 'Music', 'Mastering', 'Instrument', 'Custom'];
@@ -23,6 +29,7 @@ const CATEGORY_ORDER = ['All', 'Reference', 'Vocal', 'Voice', 'Music', 'Masterin
 export function PresetBrowser({
   factoryPresets, userPresets, currentState,
   onLoad, onSave, onDelete, onExport, onImport, onClose,
+  loadError, saveError, onDismissLoadError, onDismissSaveError,
 }: Props) {
   const [search,       setSearch]       = useState('');
   const [category,     setCategory]     = useState('All');
@@ -65,9 +72,9 @@ export function PresetBrowser({
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
+    reader.onload = async ev => {
       const text = ev.target?.result as string;
-      const result = onImport(text);
+      const result = await onImport(text);
       if (result.preset) {
         setImportOk(true);
         setImportError(null);
@@ -100,6 +107,22 @@ export function PresetBrowser({
           overflow: 'hidden',
         }}
       >
+        {/* ── Load-error banner ─────────────────────────────────────────── */}
+        {loadError && (
+          <div style={{
+            padding: '10px 20px', background: 'rgba(239,68,68,0.10)',
+            borderBottom: '1px solid rgba(239,68,68,0.25)',
+            display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 11, color: '#ef4444', flex: 1 }}>⚠ {loadError}</span>
+            <button
+              onClick={onDismissLoadError}
+              title="Dismiss"
+              style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 14, cursor: 'pointer', padding: '0 2px', opacity: 0.7 }}
+            >✕</button>
+          </div>
+        )}
+
         {/* ── Modal header ──────────────────────────────────────────────── */}
         <div style={{
           padding: '14px 20px', borderBottom: '1px solid #1a1a2e',
@@ -136,6 +159,22 @@ export function PresetBrowser({
 
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#505065', fontSize: 18, cursor: 'pointer', padding: '0 4px' }}>✕</button>
         </div>
+
+        {/* ── Save-error banner ─────────────────────────────────────────── */}
+        {saveError && (
+          <div style={{
+            padding: '8px 20px', background: 'rgba(239,68,68,0.10)',
+            borderBottom: '1px solid rgba(239,68,68,0.20)',
+            display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 11, color: '#ef4444', flex: 1 }}>⚠ {saveError}</span>
+            <button
+              onClick={onDismissSaveError}
+              title="Dismiss"
+              style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 14, cursor: 'pointer', padding: '0 2px', opacity: 0.7 }}
+            >✕</button>
+          </div>
+        )}
 
         {/* ── Save dialog ───────────────────────────────────────────────── */}
         {saveOpen && (
