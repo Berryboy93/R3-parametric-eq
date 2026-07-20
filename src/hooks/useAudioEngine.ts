@@ -97,6 +97,11 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   const [recentFiles,    setRecentFiles]    = useState<RecentFileMeta[]>([]);
   const [historyError,   setHistoryError]   = useState<string | null>(null);
 
+  // Ref mirror of cacheError so async loadFile closures can read the current
+  // value without capturing a stale snapshot at useCallback creation time.
+  const cacheErrorRef = useRef<string | null>(null);
+  useEffect(() => { cacheErrorRef.current = cacheError; }, [cacheError]);
+
   // Track the id of the currently active recent file (for highlighting in the list)
   const activeRecentIdRef = useRef<string | null>(null);
 
@@ -182,7 +187,10 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   // ── Load an audio file ───────────────────────────────────────────────────────
   const loadFile = useCallback(async (file: File) => {
     setSourceError(null);
-    setCacheError(null);
+    // cacheError is intentionally NOT cleared here. It stays visible until the
+    // addRecentFile result arrives: a clean cache (null) clears it, a repeated
+    // quota failure keeps it — preventing the banner from flashing repeatedly
+    // when the user loads several large files in a row while storage is full.
     try {
       const ctx = await ensureCtx();
       const arrayBuf   = await file.arrayBuffer();
@@ -197,7 +205,17 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
       // Persist to IndexedDB (non-blocking; report error/warning separately).
       // Always refresh the recent-files list regardless of warning vs. clean success.
       addRecentFile(file).then(msg => {
-        if (msg) setCacheError(msg);
+        if (msg) {
+          // Only show the warning if no banner is already visible.
+          // This coalesces rapid repeated quota failures (e.g. loading several
+          // large files in a row while storage is full) into a single persistent
+          // banner rather than replacing it on every load.
+          if (!cacheErrorRef.current) setCacheError(msg);
+        } else {
+          // Clean cache write — dismiss any prior quota/storage warning since
+          // the situation has clearly improved.
+          setCacheError(null);
+        }
         refreshRecentFiles().then(noop);
       });
     } catch {

@@ -518,7 +518,18 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
           <span style={{ fontSize: 12 }}>💾</span>
-          <span style={{ fontSize: 11, color: '#e8b84b', flex: 1 }}>{cacheError} — file won't be restored on reload</span>
+          <span style={{ fontSize: 11, color: '#e8b84b', flex: 1 }}>
+            {cacheError}
+            {' — '}
+            <button
+              onClick={async () => { onClearCacheError(); await onClearCachedFile(); }}
+              style={{
+                background: 'none', border: 'none', padding: 0,
+                color: '#e8b84b', cursor: 'pointer', fontSize: 11,
+                textDecoration: 'underline', fontWeight: 700,
+              }}
+            >Clear history to free space</button>
+          </span>
           <button onClick={onClearCacheError}
             style={{ background: 'none', border: 'none', color: '#705030', cursor: 'pointer', fontSize: 14 }}>✕</button>
         </div>
