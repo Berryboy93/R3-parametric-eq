@@ -72,6 +72,19 @@ export async function addRecentFile(file: File): Promise<string | null> {
   if (file.size > MAX_BYTES) {
     return `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB) — maximum is 50 MB`;
   }
+  // Check available quota — non-blocking: the write always proceeds.
+  // If space is tight we surface a warning after a successful write so the
+  // user knows the file may be evicted under memory pressure.
+  let quotaWarning: string | null = null;
+  if ('storage' in navigator) {
+    try {
+      const { quota = 0, usage = 0 } = await navigator.storage.estimate();
+      const available = quota - usage;
+      if (available > 0 && available < file.size * 2) {
+        quotaWarning = `Storage low (${(available / 1024 / 1024).toFixed(0)} MB free) — file cached but may be evicted by the browser`;
+      }
+    } catch { /* estimate not available in this browser */ }
+  }
   try {
     const data: ArrayBuffer = await file.arrayBuffer();
     const db = await openDb();
@@ -104,7 +117,9 @@ export async function addRecentFile(file: File): Promise<string | null> {
         };
 
         const putReq = store.put(record);
-        putReq.onsuccess = () => { db.close(); resolve(null); };
+        // Return quotaWarning on success so the caller can surface it;
+        // null means "cached cleanly with no concerns".
+        putReq.onsuccess = () => { db.close(); resolve(quotaWarning); };
         putReq.onerror   = () => { db.close(); resolve(`Could not cache file: ${putReq.error?.message}`); };
       };
       getAllReq.onerror = () => { db.close(); resolve(`Could not read cache: ${getAllReq.error?.message}`); };

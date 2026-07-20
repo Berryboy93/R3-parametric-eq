@@ -184,13 +184,11 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
       setFileReady(true);
       setFileName(file.name);
       setFileFromCache(false);
-      // Persist to IndexedDB (non-blocking; report error separately)
-      addRecentFile(file).then(err => {
-        if (err) {
-          setCacheError(err);
-        } else {
-          refreshRecentFiles().then(noop);
-        }
+      // Persist to IndexedDB (non-blocking; report error/warning separately).
+      // Always refresh the recent-files list regardless of warning vs. clean success.
+      addRecentFile(file).then(msg => {
+        if (msg) setCacheError(msg);
+        refreshRecentFiles().then(noop);
       });
     } catch {
       setSourceError(`Could not decode "${file.name}" — try MP3, WAV, OGG, or FLAC`);
@@ -286,10 +284,16 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
         setFileFromCache(true);
         setSourceMode('file');
       } catch {
-        // Corrupted cache entry — remove it silently
+        // Corrupted / evicted cache entry — remove it and notify the user
+        // so they know to reload the file rather than wondering why FILE mode vanished.
         removeRecentFile(newest.id).then(() => {
           if (!cancelled) refreshRecentFiles();
         });
+        if (!cancelled) {
+          setCacheError(
+            `"${newest.name}" could not be restored from cache — please reload it`
+          );
+        }
       }
     })();
     return () => { cancelled = true; };
