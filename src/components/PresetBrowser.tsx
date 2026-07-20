@@ -141,7 +141,7 @@ export function PresetBrowser({
           padding: '14px 20px', borderBottom: '1px solid #1a1a2e',
           display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
         }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: '#B7FF00', letterSpacing: '0.14em', fontFamily: 'Bebas Neue, Montserrat, sans-serif' }}>
+          <span style={{ fontSize: 16, fontWeight: 900, color: '#00D4FF', letterSpacing: '0.14em', fontFamily: 'Bebas Neue, Montserrat, sans-serif' }}>
             PRESET BROWSER
           </span>
           <span style={{ fontSize: 10, color: '#404055', marginLeft: 2 }}>
@@ -155,7 +155,7 @@ export function PresetBrowser({
             <span style={{ fontSize: 10, color: '#ef4444', maxWidth: 200 }}>{importError}</span>
           )}
           {importOk && (
-            <span style={{ fontSize: 10, color: '#B7FF00' }}>✓ Imported</span>
+            <span style={{ fontSize: 10, color: '#00D4FF' }}>✓ Imported</span>
           )}
           <button
             onClick={() => fileRef.current?.click()}
@@ -237,9 +237,9 @@ export function PresetBrowser({
                 style={{
                   padding: '4px 12px', borderRadius: 20, cursor: 'pointer',
                   fontSize: 10, fontWeight: 700, letterSpacing: '0.07em', whiteSpace: 'nowrap',
-                  border: `1px solid ${category === c ? '#B7FF0060' : '#252535'}`,
+                  border: `1px solid ${category === c ? '#00D4FF60' : '#252535'}`,
                   background: category === c ? 'rgba(183,255,0,0.1)' : 'transparent',
-                  color: category === c ? '#B7FF00' : '#505065',
+                  color: category === c ? '#00D4FF' : '#505065',
                   transition: 'all 120ms',
                 }}
               >{c.toUpperCase()}</button>
@@ -305,8 +305,8 @@ function PresetCard({
         </span>
         {preset.isFactory && (
           <span style={{
-            fontSize: 8, fontWeight: 800, color: '#B7FF00', letterSpacing: '0.08em',
-            border: '1px solid #B7FF0040', borderRadius: 3, padding: '1px 5px', flexShrink: 0,
+            fontSize: 8, fontWeight: 800, color: '#00D4FF', letterSpacing: '0.08em',
+            border: '1px solid #00D4FF40', borderRadius: 3, padding: '1px 5px', flexShrink: 0,
           }}>FACTORY</span>
         )}
       </div>
@@ -374,7 +374,7 @@ function btnStyle(variant: 'accent' | 'ghost' | 'danger'): React.CSSProperties {
     border: '1px solid', transition: 'all 120ms', whiteSpace: 'nowrap',
     fontFamily: 'Montserrat, sans-serif',
   };
-  if (variant === 'accent') return { ...base, background: 'rgba(183,255,0,0.12)', borderColor: '#B7FF0060', color: '#B7FF00' };
+  if (variant === 'accent') return { ...base, background: 'rgba(183,255,0,0.12)', borderColor: '#00D4FF60', color: '#00D4FF' };
   if (variant === 'danger') return { ...base, background: 'rgba(239,68,68,0.12)', borderColor: '#ef444460', color: '#ef4444' };
   return { ...base, background: 'transparent', borderColor: '#252535', color: '#606080' };
 }

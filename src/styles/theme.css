@@ -27,9 +27,9 @@
 :root {
   /* ==================== PRIMARY BRAND ==================== */
   /* RFQ-Official Manufacturing Specification v1.0 */
-  --r3-neon-green: #B7FF00; /* Official brand color */
-  --r3-electric-lime: #B7F500;
-  --r3-toxic-neon: #A8FF00;
+  --r3-neon-green: #00D4FF; /* Updated: Electric Cyan */
+  --r3-electric-lime: #00BFEA;
+  --r3-toxic-neon: #47FFBA;
 
   /* ==================== PURPLE (PREMIUM) ==================== */
   --r3-cyber-purple: #8E3CFF;
@@ -77,13 +77,13 @@
   --r3-muted:   #888888;
 
   /* ==================== GLOWS (RFQ-Official) ==================== */
-  --r3-glow-primary:      rgba(183, 255, 0, 0.95); /* Based on #B7FF00 */
-  --r3-glow-primary-soft: rgba(183, 255, 0, 0.40);
+  --r3-glow-primary:      rgba(0, 212, 255, 0.95); /* Based on #00D4FF */
+  --r3-glow-primary-soft: rgba(0, 212, 255, 0.40);
   --r3-glow-purple:       rgba(161, 75, 255, 0.55);
   --r3-glow-orange:       rgba(255, 140, 26, 0.60);
 
   /* ==================== GRADIENTS ==================== */
-  --r3-gradient-main-brand:  linear-gradient(90deg, #B7F500, #B7FF00, #A8FF00);
+  --r3-gradient-main-brand:  linear-gradient(90deg, #00BFEA, #00D4FF, #47FFBA);
   --r3-gradient-premium:     linear-gradient(90deg, #6F2EFF, #A14BFF, #C57EFF);
   --r3-gradient-flash-sale:  linear-gradient(90deg, #FF6A00, #FF8C1A, #FFC233);
   --r3-gradient-background:  linear-gradient(90deg, #080808, #242424, #1C1C1C);

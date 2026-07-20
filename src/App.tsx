@@ -128,7 +128,7 @@ export function App() {
             }} />
             <span style={{
               position: 'absolute',
-              fontSize: 11, fontWeight: 900, color: '#B7FF00',
+              fontSize: 11, fontWeight: 900, color: '#00D4FF',
               letterSpacing: '0.02em',
               fontFamily: 'Bebas Neue, Montserrat, sans-serif',
               textShadow: '0 0 10px rgba(183,255,0,0.7)',
@@ -144,9 +144,9 @@ export function App() {
               <span style={{
                 fontSize: 11, fontWeight: 700,
                 fontFamily: 'Bebas Neue, Montserrat, sans-serif',
-                color: '#B7FF00',
+                color: '#00D4FF',
                 letterSpacing: '0.22em',
-                borderBottom: '2px solid #B7FF00',
+                borderBottom: '2px solid #00D4FF',
                 paddingBottom: 2,
                 textTransform: 'uppercase',
               }}>R3 V4 NATIVE</span>
@@ -177,14 +177,14 @@ export function App() {
               }}>EQ Mixing Guide</span>
               <span style={{ color: '#2a2a2a', fontSize: 10 }}>·</span>
               <span style={{
-                fontSize: 11, color: '#B7FF00', opacity: 0.85,
+                fontSize: 11, color: '#00D4FF', opacity: 0.85,
                 fontFamily: 'Montserrat, sans-serif',
               }}>Perfect your sound.</span>
             </div>
 
             {/* Attribution */}
             <div style={{
-              fontSize: 11, color: '#B7FF00', opacity: 0.7,
+              fontSize: 11, color: '#00D4FF', opacity: 0.7,
               fontStyle: 'italic', fontWeight: 600,
               letterSpacing: '0.06em', marginTop: 3,
               fontFamily: 'Montserrat, sans-serif',
@@ -310,9 +310,9 @@ export function App() {
             letterSpacing: '0.06em',
             lineHeight: 1.6,
           }}>
-            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.8, marginRight: 6, verticalAlign: 'middle' }}>"</span>
+            <span style={{ color: '#00D4FF', fontSize: 22, opacity: 0.8, marginRight: 6, verticalAlign: 'middle' }}>"</span>
             LESS IS MORE. SPACE IS POWER.
-            <span style={{ color: '#B7FF00', fontSize: 22, opacity: 0.8, marginLeft: 6, verticalAlign: 'middle' }}>"</span>
+            <span style={{ color: '#00D4FF', fontSize: 22, opacity: 0.8, marginLeft: 6, verticalAlign: 'middle' }}>"</span>
           </div>
           <div style={{ fontSize: 9, color: '#505050', marginTop: 10, letterSpacing: '0.16em', fontWeight: 700 }}>
             R3 NATIVE · EQ MASTERCLASS · BY DJ ERNESTO
@@ -403,7 +403,7 @@ function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./d
                     ? 'rgba(183,255,0,0.08)'
                     : 'transparent',
                   border: `1px solid ${(open && activeTab === tab) ? 'rgba(183,255,0,0.40)' : 'transparent'}`,
-                  color: (open && activeTab === tab) ? '#B7FF00' : '#606060',
+                  color: (open && activeTab === tab) ? '#00D4FF' : '#606060',
                   boxShadow: (open && activeTab === tab) ? 'inset 0 1px 3px rgba(0,0,0,0.5)' : 'none',
                   transition: 'all 150ms',
                 }}
@@ -416,7 +416,7 @@ function ToolsPanel({ onApply }: { onApply: (bandId: number, update: import('./d
           {/* Spacer + chevron */}
           <div style={{ flex: 1 }} />
           <span style={{
-            fontSize: 10, color: open ? '#B7FF00' : '#3a3a3a',
+            fontSize: 10, color: open ? '#00D4FF' : '#3a3a3a',
             transform: open ? 'rotate(180deg)' : 'rotate(0)',
             display: 'inline-block', transition: 'all 200ms',
           }}>▾</span>
@@ -465,14 +465,14 @@ function ProTipsPanel() {
     <div style={{
       background: 'linear-gradient(135deg, #1A2535 0%, #0F1219 100%)',
       border: '1px solid #242424',
-      borderLeft: '6px solid #B7FF00',
+      borderLeft: '6px solid #00D4FF',
       borderRadius: 8,
       padding: '20px 24px',
       position: 'relative',
     }}>
       {/* PRO TIPS label */}
       <div style={{
-        fontSize: 10, fontWeight: 800, color: '#B7FF00',
+        fontSize: 10, fontWeight: 800, color: '#00D4FF',
         letterSpacing: '0.18em', marginBottom: 16,
         fontFamily: 'Bebas Neue, Montserrat, sans-serif',
         textTransform: 'uppercase',
@@ -489,13 +489,13 @@ function ProTipsPanel() {
             <div style={{
               width: 36, height: 36,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, color: '#B7FF00',
+              fontSize: 20, color: '#00D4FF',
               filter: 'drop-shadow(0 0 6px rgba(183,255,0,0.4))',
             }}>{tip.icon}</div>
 
             {/* Title */}
             <div style={{
-              fontSize: 11, fontWeight: 800, color: '#B7FF00',
+              fontSize: 11, fontWeight: 800, color: '#00D4FF',
               letterSpacing: '0.06em',
               fontFamily: 'Bebas Neue, Montserrat, sans-serif',
               textTransform: 'uppercase',
@@ -514,7 +514,7 @@ function ProTipsPanel() {
       {/* DJ Ernesto signature */}
       <div style={{
         textAlign: 'right', marginTop: 16,
-        fontSize: 12, color: '#B7FF00', opacity: 0.6,
+        fontSize: 12, color: '#00D4FF', opacity: 0.6,
         fontStyle: 'italic', fontWeight: 600,
         fontFamily: 'Montserrat, sans-serif',
         letterSpacing: '0.04em',
@@ -559,7 +559,7 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
         }}
       >
         <div style={{
-          fontSize: 20, fontWeight: 800, color: '#B7FF00',
+          fontSize: 20, fontWeight: 800, color: '#00D4FF',
           letterSpacing: '0.14em',
           fontFamily: 'Bebas Neue, Montserrat, sans-serif',
           marginBottom: 16,
@@ -581,7 +581,7 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
                     background: '#1e1e1e',
                     border: '1px solid #3a3a3a',
                     borderBottom: '2px solid #111111',
-                    color: '#B7FF00', fontFamily: 'monospace',
+                    color: '#00D4FF', fontFamily: 'monospace',
                   }}>{k}</kbd>
                 ))}
               </div>
@@ -596,7 +596,7 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
             padding: '8px', borderRadius: 5,
             background: 'rgba(183,255,0,0.08)',
             border: '1px solid rgba(183,255,0,0.40)',
-            color: '#B7FF00', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
+            color: '#00D4FF', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
             cursor: 'pointer',
             boxShadow: '0 0 8px rgba(183,255,0,0.10)',
           }}

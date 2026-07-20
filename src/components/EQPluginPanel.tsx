@@ -77,7 +77,7 @@ function fmtTime(s: number) {
 }
 
 // ── Shared R3 button helper ────────────────────────────────────────────────────
-const r3Btn = (active: boolean, color = '#B7FF00'): React.CSSProperties => ({
+const r3Btn = (active: boolean, color = '#00D4FF'): React.CSSProperties => ({
   background: active
     ? `rgba(183,255,0,0.08)`
     : `#1a1a1a`,
@@ -167,7 +167,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             padding: '20px 40px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>🎵</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#B7FF00', letterSpacing: '0.08em',
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#00D4FF', letterSpacing: '0.08em',
               textShadow: '0 0 10px rgba(183,255,0,0.5)' }}>
               DROP AUDIO FILE
             </div>
@@ -273,7 +273,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
                   padding: '4px 7px', borderRadius: 4,
                   fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
                   ...r3Btn(showRecents),
-                  color: showRecents ? '#B7FF00' : '#606060',
+                  color: showRecents ? '#00D4FF' : '#606060',
                 }}
               >
                 🕐 <span style={{ fontSize: 8 }}>{showRecents ? '▴' : '▾'}</span>
@@ -330,7 +330,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
                         >
                           <span style={{
                             fontSize: 10, fontWeight: 600,
-                            color: isActive ? '#B7FF00' : '#b0b0b0',
+                            color: isActive ? '#00D4FF' : '#b0b0b0',
                             lineHeight: 1.3,
                           }}>{displayName}</span>
                           <span style={{ fontSize: 8, color: '#484848' }}>{sizeMb} MB</span>
@@ -382,7 +382,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
                   background: 'rgba(183,255,0,0.08)',
                   border: '1px solid rgba(183,255,0,0.55)',
                   borderTop: '1px solid rgba(183,255,0,0.40)',
-                  color: '#B7FF00',
+                  color: '#00D4FF',
                   boxShadow: 'inset 0 1px 0 rgba(183,255,0,0.06), 0 0 8px rgba(183,255,0,0.15)',
                 }),
             cursor: 'pointer', transition: 'all 150ms',
@@ -521,7 +521,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             type="range" min={0} max={fileDuration} step={0.1}
             value={fileCurrentTime}
             onChange={e => onSeek(parseFloat(e.target.value))}
-            style={{ flex: 1, height: 3, cursor: 'pointer', accentColor: '#B7FF00' }}
+            style={{ flex: 1, height: 3, cursor: 'pointer', accentColor: '#00D4FF' }}
           />
           <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#3a3a3a', minWidth: 30 }}>
             {fmtTime(fileDuration)}
@@ -618,7 +618,7 @@ interface FaderProps {
 }
 
 function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggleEnable }: FaderProps) {
-  const color  = BAND_COLORS[band.id] ?? '#B7FF00';
+  const color  = BAND_COLORS[band.id] ?? '#00D4FF';
   const noGain = band.type === FilterType.HighPass || band.type === FilterType.LowPass;
 
   return (
@@ -700,7 +700,7 @@ function VerticalFader({ band, selected, isLast, onSelect, onGainChange, onToggl
 
       <span style={{
         fontSize: 8,
-        color: selected ? '#B7FF00' : '#2e2e2e',
+        color: selected ? '#00D4FF' : '#2e2e2e',
         marginTop: 2, letterSpacing: '0.03em',
         transition: 'color 150ms',
       }}>

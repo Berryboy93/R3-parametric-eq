@@ -7,16 +7,16 @@ import { useRef } from 'react';
 import { FilterType } from '../dsp';
 import type { EQBand } from '../dsp';
 
-// All bands use R3 NATIVE Neon Green spectrum per brand spec (RFQ v1.0)
+// Abstract spectrum — each band its own vivid neon
 export const BAND_COLORS = [
-  '#B7FF00', // 1 HP  — Neon Green (core brand)
-  '#A8E600', // 2 LS  — Muted Green
-  '#C4FF1A', // 3 PK  — Bright Green
-  '#B0FF00', // 4 PK  — Core Green
-  '#D4FF33', // 5 PK  — Light Green
-  '#99CC00', // 6 PK  — Dark Green
-  '#CCFF00', // 7 HS  — Green-Yellow
-  '#7FFF00', // 8 LP  — Lime Green
+  '#FF3CAC', // 1 HP  — Hot Pink
+  '#FF6B35', // 2 LS  — Electric Orange
+  '#FFE600', // 3 PK  — Vivid Yellow
+  '#47FFBA', // 4 PK  — Neon Mint
+  '#00D4FF', // 5 PK  — Electric Cyan
+  '#7C4DFF', // 6 PK  — Deep Violet
+  '#E040FB', // 7 HS  — Electric Magenta
+  '#FF80AB', // 8 LP  — Soft Rose
 ];
 
 const TYPE_LABELS: Record<FilterType, string> = {

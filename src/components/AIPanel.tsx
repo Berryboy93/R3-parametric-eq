@@ -73,11 +73,11 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
       >
         <span style={{
           width: 8, height: 8, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
-          background: 'radial-gradient(circle at 35% 35%, #d4ff40, #B7FF00)',
+          background: 'radial-gradient(circle at 35% 35%, #d4ff40, #00D4FF)',
           boxShadow: '0 0 6px rgba(183,255,0,0.55)',
         }} />
         <span style={{
-          fontSize: 12, fontWeight: 800, color: '#B7FF00',
+          fontSize: 12, fontWeight: 800, color: '#00D4FF',
           letterSpacing: '0.14em', fontFamily: 'Bebas Neue, Montserrat, sans-serif',
           textShadow: '0 0 8px rgba(183,255,0,0.35)',
         }}>AI ANALYSIS</span>
@@ -87,7 +87,7 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
         {recs.length > 0 && (
           <span style={{
             marginLeft: 4, fontSize: 9, fontWeight: 700,
-            background: 'rgba(183,255,0,0.10)', color: '#B7FF00',
+            background: 'rgba(183,255,0,0.10)', color: '#00D4FF',
             border: '1px solid rgba(183,255,0,0.30)', borderRadius: 3,
             padding: '1px 6px', letterSpacing: '0.04em',
           }}>{recs.length} ISSUE{recs.length !== 1 ? 'S' : ''}</span>
@@ -108,7 +108,7 @@ export function AIPanel({ spectrumData, isPlaying, bands, onApply }: Props) {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recs.map(rec => {
-                const meta = ISSUE_META[rec.issue] ?? { label: rec.issue, dot: '#B7FF00', color: '#B7FF00' };
+                const meta = ISSUE_META[rec.issue] ?? { label: rec.issue, dot: '#00D4FF', color: '#00D4FF' };
                 const pct  = Math.round(rec.confidence * 100);
                 const done = applied.has(rec.issue);
                 return (

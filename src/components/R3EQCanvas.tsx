@@ -9,7 +9,7 @@ import type { FrequencyResponsePoint, EQBand } from '../dsp';
 import { FilterType } from '../dsp';
 import { BAND_COLORS } from './BandStrip';
 
-export const NEON_GREEN = '#B7FF00';
+export const NEON_GREEN = '#00D4FF';
 export const DB_TICKS   = [24, 12, 6, 0, -6, -12, -24];
 export const DB_RANGE   = 24;
 
@@ -100,7 +100,7 @@ export function R3EQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDra
         const db  = Math.max(-100, liveSpectrum[i]);
         const n   = (db + 100) / 100;
         const barH = n * H;
-        ctx.fillStyle = `rgba(183,255,0,${0.06 + n * 0.18})`;
+        ctx.fillStyle = `rgba(0,212,255,${0.06 + n * 0.18})`;
         ctx.fillRect(x0, H - barH, Math.max(0.5, x1 - x0), barH);
       }
     } else {
@@ -114,14 +114,14 @@ export function R3EQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDra
 
         // Body gradient: bright at top, fade to near-zero at bottom
         const grad = ctx.createLinearGradient(0, by, 0, H);
-        grad.addColorStop(0,   `rgba(183,255,0,${0.22 + n * 0.18})`);
-        grad.addColorStop(0.5, `rgba(183,255,0,${0.08 + n * 0.08})`);
-        grad.addColorStop(1,   'rgba(183,255,0,0.02)');
+        grad.addColorStop(0,   `rgba(0,212,255,${0.22 + n * 0.18})`);
+        grad.addColorStop(0.5, `rgba(0,212,255,${0.08 + n * 0.08})`);
+        grad.addColorStop(1,   'rgba(0,212,255,0.02)');
         ctx.fillStyle = grad;
         ctx.fillRect(bx, by, bw, barH);
 
         // Bright cap line at the top of each bar
-        ctx.fillStyle = `rgba(183,255,0,${0.45 + n * 0.35})`;
+        ctx.fillStyle = `rgba(0,212,255,${0.45 + n * 0.35})`;
         ctx.fillRect(bx, by, bw, 1.2);
       }
     }
@@ -141,9 +141,9 @@ export function R3EQCanvas({ curve, bands, selectedBand, onSelectBand, onBandDra
     ctx.lineTo(freqToX(curve[0].frequency, W), gainToY(0, H));
     ctx.closePath();
     const fillGrad = ctx.createLinearGradient(0, 0, 0, H);
-    fillGrad.addColorStop(0,   `rgba(183,255,0,${bypass ? 0.04 : 0.18})`);
-    fillGrad.addColorStop(0.5, `rgba(183,255,0,${bypass ? 0.02 : 0.08})`);
-    fillGrad.addColorStop(1,   'rgba(183,255,0,0)');
+    fillGrad.addColorStop(0,   `rgba(0,212,255,${bypass ? 0.04 : 0.18})`);
+    fillGrad.addColorStop(0.5, `rgba(0,212,255,${bypass ? 0.02 : 0.08})`);
+    fillGrad.addColorStop(1,   'rgba(0,212,255,0)');
     ctx.fillStyle = fillGrad;
     ctx.fill();
     ctx.restore();

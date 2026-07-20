@@ -27,7 +27,7 @@ function formatFreq(f: number): string {
 }
 
 export function BandControl({ band, isSelected, onSelect, onUpdate }: BandControlProps) {
-  const color = BAND_COLORS[band.id] || '#B7FF00';
+  const color = BAND_COLORS[band.id] || '#00D4FF';
   const showGain = band.type !== FilterType.HighPass && band.type !== FilterType.LowPass;
 
   return (
@@ -118,7 +118,7 @@ export function BandControl({ band, isSelected, onSelect, onUpdate }: BandContro
         <div style={{ width: '100%' }}>
           <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#999', marginBottom: 2 }}>
             <span>GAIN</span>
-            <span style={{ color: band.gain > 0 ? '#B7FF00' : band.gain < 0 ? '#F06292' : '#e6e6e6' }}>
+            <span style={{ color: band.gain > 0 ? '#00D4FF' : band.gain < 0 ? '#F06292' : '#e6e6e6' }}>
               {band.gain > 0 ? '+' : ''}{band.gain.toFixed(1)}dB
             </span>
           </label>
