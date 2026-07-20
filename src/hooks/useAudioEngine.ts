@@ -116,6 +116,13 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   const sourceModeRef  = useRef<AudioSourceMode>('pink-noise');
   useEffect(() => { sourceModeRef.current = sourceMode; }, [sourceMode]);
 
+  // Live refs for bands/bypass so switchSource can read the *latest* values
+  // after its async play() resolves, not the stale closure snapshot.
+  const bandsRef  = useRef(bands);
+  const bypassRef = useRef(bypass);
+  bandsRef.current  = bands;
+  bypassRef.current = bypass;
+
   // ── Refresh recent files list ────────────────────────────────────────────────
   const refreshRecentFiles = useCallback(async () => {
     const list = await listRecentFiles();
@@ -476,9 +483,14 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
         // nothing is actually playing.
         setSourceMode(prevMode);
         sourceModeRef.current = prevMode;
+      } else if (ctxRef.current) {
+        // Re-sync filters with the *latest* band values. EQ changes made while
+        // the async transition was in flight (stop→play) were silently dropped
+        // because playingRef was false during that window. Apply them now.
+        syncFilters(bandsRef.current, bypassRef.current, ctxRef.current.currentTime);
       }
     }
-  }, [stop, play]);
+  }, [stop, play, syncFilters]);
 
   return {
     isPlaying, play, stop, spectrumData,
