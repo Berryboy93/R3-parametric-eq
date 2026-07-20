@@ -9,12 +9,16 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { EQBand, FilterType } from '../dsp';
 import {
-  cacheAudioFile,
-  clearCachedAudioFile,
-  loadCachedAudioFile,
+  addRecentFile,
+  clearAllRecentFiles,
+  listRecentFiles,
+  loadRecentFileById,
+  removeRecentFile,
 } from './useAudioFileCache';
+import type { RecentFileMeta } from './useAudioFileCache';
 
 export type AudioSourceMode = 'pink-noise' | 'microphone' | 'file';
+export type { RecentFileMeta };
 
 // ── Mic acquisition with timeout ─────────────────────────────────────────────
 // getUserMedia has no built-in cancellation. We race it against a timer and,
@@ -88,6 +92,10 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   const [fileCurrentTime, setFileCurrentTime] = useState(0);
   const [cacheError,     setCacheError]     = useState<string | null>(null);
   const [fileFromCache,  setFileFromCache]  = useState(false);
+  const [recentFiles,    setRecentFiles]    = useState<RecentFileMeta[]>([]);
+
+  // Track the id of the currently active recent file (for highlighting in the list)
+  const activeRecentIdRef = useRef<string | null>(null);
 
   // Audio node refs
   const ctxRef         = useRef<AudioContext | null>(null);
@@ -107,6 +115,12 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   // Ref copy of sourceMode to avoid stale closure in play()
   const sourceModeRef  = useRef<AudioSourceMode>('pink-noise');
   useEffect(() => { sourceModeRef.current = sourceMode; }, [sourceMode]);
+
+  // ── Refresh recent files list ────────────────────────────────────────────────
+  const refreshRecentFiles = useCallback(async () => {
+    const list = await listRecentFiles();
+    setRecentFiles(list);
+  }, []);
 
   // ── Filter sync ─────────────────────────────────────────────────────────────
   const syncFilters = useCallback((bs: readonly EQBand[], byp: boolean, now: number) => {
@@ -171,18 +185,67 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
       setFileName(file.name);
       setFileFromCache(false);
       // Persist to IndexedDB (non-blocking; report error separately)
-      cacheAudioFile(file).then(err => {
-        if (err) setCacheError(err);
+      addRecentFile(file).then(err => {
+        if (err) {
+          setCacheError(err);
+        } else {
+          refreshRecentFiles().then(noop);
+        }
       });
     } catch {
       setSourceError(`Could not decode "${file.name}" — try MP3, WAV, OGG, or FLAC`);
       setFileReady(false);
     }
-  }, [ensureCtx]);
+  }, [ensureCtx, refreshRecentFiles]);
 
-  // ── Clear cached file ────────────────────────────────────────────────────────
+  // ── Load a file from the recent list by its IndexedDB id ─────────────────────
+  const loadRecentFile = useCallback(async (id: string) => {
+    setSourceError(null);
+    setCacheError(null);
+    const record = await loadRecentFileById(id);
+    if (!record) {
+      setSourceError('Could not load file from history — it may have been cleared');
+      await refreshRecentFiles();
+      return;
+    }
+    try {
+      const ctx = await ensureCtx();
+      const audioBuf = await ctx.decodeAudioData(record.data.slice(0));
+      fileBufferRef.current = audioBuf;
+      activeRecentIdRef.current = id;
+      setFileDuration(audioBuf.duration);
+      setFileCurrentTime(0);
+      offsetRef.current = 0;
+      setFileReady(true);
+      setFileName(record.name);
+      setFileFromCache(true);
+    } catch {
+      setSourceError(`Could not decode "${record.name}" — the cached copy may be corrupted`);
+      setFileReady(false);
+    }
+  }, [ensureCtx, refreshRecentFiles]);
+
+  // ── Remove a single entry from the recent list ────────────────────────────────
+  const removeRecentFileById = useCallback(async (id: string) => {
+    await removeRecentFile(id);
+    // If the removed entry was the active file, clear the player
+    if (activeRecentIdRef.current === id) {
+      fileBufferRef.current = null;
+      activeRecentIdRef.current = null;
+      setFileReady(false);
+      setFileName(null);
+      setFileDuration(0);
+      setFileCurrentTime(0);
+      offsetRef.current = 0;
+      setFileFromCache(false);
+    }
+    await refreshRecentFiles();
+  }, [refreshRecentFiles]);
+
+  // ── Clear cached file (all recent files) ─────────────────────────────────────
   const clearCachedFile = useCallback(async () => {
-    await clearCachedAudioFile();
+    await clearAllRecentFiles();
+    activeRecentIdRef.current = null;
     fileBufferRef.current = null;
     setFileReady(false);
     setFileName(null);
@@ -191,13 +254,21 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     offsetRef.current = 0;
     setFileFromCache(false);
     setCacheError(null);
+    setRecentFiles([]);
   }, []);
 
-  // ── Restore file from IndexedDB on mount ─────────────────────────────────────
+  // ── Restore most-recent file from IndexedDB on mount ─────────────────────────
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const record = await loadCachedAudioFile();
+      // Load the list first so the popover is populated even if decode fails
+      const list = await listRecentFiles();
+      if (cancelled) return;
+      setRecentFiles(list);
+
+      if (list.length === 0) return;
+      const newest = list[0]; // already sorted newest-first
+      const record = await loadRecentFileById(newest.id);
       if (!record || cancelled) return;
       try {
         // Build a temporary AudioContext just for decoding (avoids requiring
@@ -207,6 +278,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
         tmpCtx.close();
         if (cancelled) return;
         fileBufferRef.current = audioBuf;
+        activeRecentIdRef.current = newest.id;
         setFileDuration(audioBuf.duration);
         setFileCurrentTime(0);
         setFileReady(true);
@@ -214,8 +286,10 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
         setFileFromCache(true);
         setSourceMode('file');
       } catch {
-        // Corrupted cache — silently clear it
-        clearCachedAudioFile();
+        // Corrupted cache entry — remove it silently
+        removeRecentFile(newest.id).then(() => {
+          if (!cancelled) refreshRecentFiles();
+        });
       }
     })();
     return () => { cancelled = true; };
@@ -406,9 +480,12 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     isPlaying, play, stop, spectrumData,
     sourceMode, setSourceMode, switchSource,
     sourceError, setSourceError,
-    loadFile, fileReady, fileName,
+    loadFile, loadRecentFile, fileReady, fileName,
     fileDuration, fileCurrentTime, seek,
     cacheError, setCacheError,
     clearCachedFile, fileFromCache,
+    recentFiles, removeRecentFileById,
   };
 }
+
+function noop() {}

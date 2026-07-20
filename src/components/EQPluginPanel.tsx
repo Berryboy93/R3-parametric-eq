@@ -3,13 +3,13 @@
  * Toolbar · canvas · vertical faders · AI
  */
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { R3EQCanvas } from './R3EQCanvas';
 import { AIPanel } from './AIPanel';
 import { BAND_COLORS } from './BandStrip';
 import { FilterType } from '../dsp';
 import type { EQBand, FrequencyResponsePoint, EQState } from '../dsp';
-import type { AudioSourceMode } from '../hooks/useAudioEngine';
+import type { AudioSourceMode, RecentFileMeta } from '../hooks/useAudioEngine';
 
 const DB_LABELS  = [24, 12, 6, 0, -6, -12, -24];
 const FREQ_TICKS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
@@ -49,6 +49,9 @@ export interface EQPluginPanelProps {
   onClearCachedFile: () => Promise<void>;
   cacheError: string | null;
   onClearCacheError: () => void;
+  recentFiles: RecentFileMeta[];
+  onLoadRecentFile: (id: string) => Promise<void>;
+  onRemoveRecentFile: (id: string) => Promise<void>;
   bypass: boolean;
   onToggleBypass: () => void;
   canUndo: boolean;
@@ -94,13 +97,28 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
     state, curve, selectedBand, onSelectBand, onBandDrag, onBandUpdate, spectrumData,
     isPlaying, onPlay, onStop, sourceMode, onSourceMode, onSwitchSource, sourceError, onClearError,
     loadFile, fileReady, fileName, fileFromCache, onClearCachedFile, cacheError, onClearCacheError,
+    recentFiles, onLoadRecentFile, onRemoveRecentFile,
     bypass, onToggleBypass, canUndo, canRedo, onUndo, onRedo, onReset, onOpenPresets, onShowHelp,
     activeSlot, onCaptureSlot, onToggleAB, onAIApply,
     fileDuration, fileCurrentTime, onSeek,
   } = props;
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
+  const recentsAnchor = useRef<HTMLDivElement>(null);
+  const [isDragging,    setIsDragging]    = useState(false);
+  const [showRecents,   setShowRecents]   = useState(false);
+
+  // Close the recents popover when clicking outside it
+  useEffect(() => {
+    if (!showRecents) return;
+    const onDown = (e: MouseEvent) => {
+      if (recentsAnchor.current && !recentsAnchor.current.contains(e.target as Node)) {
+        setShowRecents(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [showRecents]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -242,6 +260,103 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
                 }}
               >✕</button>
             </>
+          )}
+
+          {/* ── Recent files dropdown ── */}
+          {recentFiles.length > 0 && (
+            <div ref={recentsAnchor} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowRecents(v => !v)}
+                title="Recent files"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 2,
+                  padding: '4px 7px', borderRadius: 4,
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
+                  ...r3Btn(showRecents),
+                  color: showRecents ? '#B7FF00' : '#606060',
+                }}
+              >
+                🕐 <span style={{ fontSize: 8 }}>{showRecents ? '▴' : '▾'}</span>
+              </button>
+
+              {showRecents && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+                  zIndex: 200,
+                  background: '#1a1a1a',
+                  border: '1px solid #333',
+                  borderTop: '2px solid rgba(183,255,0,0.35)',
+                  borderRadius: '0 4px 4px 4px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+                  minWidth: 220, maxWidth: 280,
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    padding: '6px 10px 4px',
+                    fontSize: 8, fontWeight: 800, letterSpacing: '0.12em',
+                    color: '#404040', textTransform: 'uppercase',
+                    borderBottom: '1px solid #242424',
+                  }}>Recent Files</div>
+
+                  {recentFiles.map((f) => {
+                    const isActive = sourceMode === 'file' && fileName === f.name;
+                    const sizeMb   = (f.size / 1024 / 1024).toFixed(1);
+                    const displayName = f.name.length > 26 ? `${f.name.slice(0, 24)}…` : f.name;
+                    return (
+                      <div
+                        key={f.id}
+                        style={{
+                          display: 'flex', alignItems: 'center',
+                          padding: '5px 8px 5px 10px',
+                          borderBottom: '1px solid #1e1e1e',
+                          background: isActive ? 'rgba(183,255,0,0.05)' : 'transparent',
+                          transition: 'background 80ms',
+                        }}
+                      >
+                        <button
+                          onClick={async () => {
+                            setShowRecents(false);
+                            onClearError();
+                            if (isPlaying) onStop();
+                            onSourceMode('file');
+                            await onLoadRecentFile(f.id);
+                          }}
+                          title={f.name}
+                          style={{
+                            flex: 1, background: 'none', border: 'none',
+                            textAlign: 'left', cursor: 'pointer', padding: 0,
+                            display: 'flex', flexDirection: 'column', gap: 1,
+                          }}
+                        >
+                          <span style={{
+                            fontSize: 10, fontWeight: 600,
+                            color: isActive ? '#B7FF00' : '#b0b0b0',
+                            lineHeight: 1.3,
+                          }}>{displayName}</span>
+                          <span style={{ fontSize: 8, color: '#484848' }}>{sizeMb} MB</span>
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await onRemoveRecentFile(f.id);
+                          }}
+                          title="Remove from history"
+                          style={{
+                            background: 'none', border: 'none',
+                            cursor: 'pointer', padding: '2px 4px',
+                            fontSize: 11, color: '#3a3a3a', lineHeight: 1,
+                            flexShrink: 0,
+                            transition: 'color 100ms',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.color = '#8a4a4a')}
+                          onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}
+                        >✕</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
         </div>
 

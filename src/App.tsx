@@ -39,10 +39,11 @@ export function App() {
   const {
     isPlaying, play, stop, spectrumData,
     sourceMode, setSourceMode, switchSource, sourceError, setSourceError,
-    loadFile, fileReady, fileName,
+    loadFile, loadRecentFile, fileReady, fileName,
     fileDuration, fileCurrentTime, seek,
     cacheError, setCacheError,
     clearCachedFile, fileFromCache,
+    recentFiles, removeRecentFileById,
   } = useAudioEngine(state.bands, state.bypass);
 
   useKeyboardShortcuts({
@@ -254,6 +255,9 @@ export function App() {
           onClearCachedFile={handleClearCachedFile}
           cacheError={cacheError}
           onClearCacheError={() => setCacheError(null)}
+          recentFiles={recentFiles}
+          onLoadRecentFile={loadRecentFile}
+          onRemoveRecentFile={removeRecentFileById}
           bypass={state.bypass}
           onToggleBypass={toggleBypass}
           canUndo={canUndo}

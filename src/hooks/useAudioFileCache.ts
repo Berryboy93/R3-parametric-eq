@@ -1,57 +1,113 @@
 /**
- * useAudioFileCache — persists the last loaded audio file in IndexedDB.
+ * useAudioFileCache — persists the last 5 loaded audio files in IndexedDB.
  *
  * Constraints:
  *   • Max file size: 50 MB (enforced on write, graceful error returned).
- *   • Only one file is stored at a time (the most recent one).
- *   • On every save the previous file is replaced, so storage stays bounded.
+ *   • Up to 5 files stored; oldest is evicted when the list is full.
+ *   • DB version bumped to 2 — migrates away from the single-record v1 store.
  */
 
 const DB_NAME    = 'r3-eq-audio-cache';
-const DB_VERSION = 1;
-const STORE_NAME = 'audio-files';
-const RECORD_KEY = 'cached-file';
+const DB_VERSION = 2;
+const STORE_NAME = 'recent-files';
+const OLD_STORE  = 'audio-files';
 
-const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
+const MAX_BYTES   = 50 * 1024 * 1024; // 50 MB
+const MAX_ENTRIES = 5;
 
-export type CachedFileRecord = {
+export type RecentFileRecord = {
+  id: string;        // unique — timestamp + random suffix
   name: string;
+  size: number;      // original File.size in bytes
   type: string;
   data: ArrayBuffer;
+  addedAt: number;   // Date.now() when stored
 };
+
+/** Lightweight descriptor returned by listRecentFiles (no ArrayBuffer). */
+export type RecentFileMeta = Omit<RecentFileRecord, 'data'>;
 
 // ── IndexedDB helpers ──────────────────────────────────────────────────────────
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore(STORE_NAME);
+
+    req.onupgradeneeded = (event) => {
+      const db      = req.result;
+      const oldVer  = event.oldVersion;
+
+      // v1 → v2: drop the old single-record store, create the new list store
+      if (oldVer < 2) {
+        if (db.objectStoreNames.contains(OLD_STORE)) {
+          db.deleteObjectStore(OLD_STORE);
+        }
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        }
+      }
     };
+
     req.onsuccess = () => resolve(req.result);
     req.onerror   = () => reject(req.error);
   });
 }
 
+function makeId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function sortByNewest(records: RecentFileMeta[]): RecentFileMeta[] {
+  return [...records].sort((a, b) => b.addedAt - a.addedAt);
+}
+
+// ── Public API ─────────────────────────────────────────────────────────────────
+
 /**
- * Store an audio File in IndexedDB.
- * Returns `null` on success, or an error string if the file exceeds MAX_BYTES
- * or IndexedDB is unavailable.
+ * Add a file to the recent list.
+ * Evicts the oldest entry when more than MAX_ENTRIES would be stored.
+ * Returns `null` on success, or an error string.
  */
-export async function cacheAudioFile(file: File): Promise<string | null> {
+export async function addRecentFile(file: File): Promise<string | null> {
   if (file.size > MAX_BYTES) {
     return `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB) — maximum is 50 MB`;
   }
   try {
     const data: ArrayBuffer = await file.arrayBuffer();
     const db = await openDb();
+
     return new Promise((resolve) => {
       const tx    = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      const record: CachedFileRecord = { name: file.name, type: file.type, data };
-      const req = store.put(record, RECORD_KEY);
-      req.onsuccess = () => { db.close(); resolve(null); };
-      req.onerror   = () => { db.close(); resolve(`Could not cache file: ${req.error?.message}`); };
+
+      // Read all existing records to check the count
+      const getAllReq = store.getAll();
+      getAllReq.onsuccess = () => {
+        const existing: RecentFileRecord[] = getAllReq.result ?? [];
+
+        // Sort oldest-first so we can evict from the front
+        const sorted = [...existing].sort((a, b) => a.addedAt - b.addedAt);
+
+        // Evict oldest entries until we're under the limit (making room for the new one)
+        const toDelete = sorted.slice(0, Math.max(0, sorted.length - MAX_ENTRIES + 1));
+        for (const old of toDelete) {
+          store.delete(old.id);
+        }
+
+        const record: RecentFileRecord = {
+          id:      makeId(),
+          name:    file.name,
+          size:    file.size,
+          type:    file.type,
+          data,
+          addedAt: Date.now(),
+        };
+
+        const putReq = store.put(record);
+        putReq.onsuccess = () => { db.close(); resolve(null); };
+        putReq.onerror   = () => { db.close(); resolve(`Could not cache file: ${putReq.error?.message}`); };
+      };
+      getAllReq.onerror = () => { db.close(); resolve(`Could not read cache: ${getAllReq.error?.message}`); };
     });
   } catch (err) {
     return `Cache unavailable: ${err instanceof Error ? err.message : String(err)}`;
@@ -59,15 +115,41 @@ export async function cacheAudioFile(file: File): Promise<string | null> {
 }
 
 /**
- * Retrieve the previously cached audio file, or `null` if nothing is stored.
+ * Return metadata for all recent files, newest first.
+ * Never rejects — returns an empty array on any error.
  */
-export async function loadCachedAudioFile(): Promise<CachedFileRecord | null> {
+export async function listRecentFiles(): Promise<RecentFileMeta[]> {
   try {
     const db = await openDb();
     return new Promise((resolve) => {
       const tx    = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
-      const req   = store.get(RECORD_KEY);
+      const req   = store.getAll();
+      req.onsuccess = () => {
+        db.close();
+        const records: RecentFileMeta[] = (req.result ?? []).map(
+          ({ id, name, size, type, addedAt }) => ({ id, name, size, type, addedAt })
+        );
+        resolve(sortByNewest(records));
+      };
+      req.onerror = () => { db.close(); resolve([]); };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Load the full ArrayBuffer for a specific recent file by id.
+ * Returns `null` if not found or on error.
+ */
+export async function loadRecentFileById(id: string): Promise<RecentFileRecord | null> {
+  try {
+    const db = await openDb();
+    return new Promise((resolve) => {
+      const tx    = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req   = store.get(id);
       req.onsuccess = () => { db.close(); resolve(req.result ?? null); };
       req.onerror   = () => { db.close(); resolve(null); };
     });
@@ -77,15 +159,15 @@ export async function loadCachedAudioFile(): Promise<CachedFileRecord | null> {
 }
 
 /**
- * Delete the cached audio file.
+ * Remove a single entry from the recent list by id.
  */
-export async function clearCachedAudioFile(): Promise<void> {
+export async function removeRecentFile(id: string): Promise<void> {
   try {
     const db = await openDb();
     return new Promise((resolve) => {
       const tx    = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      const req   = store.delete(RECORD_KEY);
+      const req   = store.delete(id);
       req.onsuccess = () => { db.close(); resolve(); };
       req.onerror   = () => { db.close(); resolve(); };
     });
@@ -93,3 +175,44 @@ export async function clearCachedAudioFile(): Promise<void> {
     // Silently ignore
   }
 }
+
+/**
+ * Clear all recent files.
+ */
+export async function clearAllRecentFiles(): Promise<void> {
+  try {
+    const db = await openDb();
+    return new Promise((resolve) => {
+      const tx    = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req   = store.clear();
+      req.onsuccess = () => { db.close(); resolve(); };
+      req.onerror   = () => { db.close(); resolve(); };
+    });
+  } catch {
+    // Silently ignore
+  }
+}
+
+// ── Legacy compatibility shims ─────────────────────────────────────────────────
+// Kept so any other code that might import the old names doesn't break during
+// the transition.
+
+/** @deprecated Use addRecentFile instead */
+export async function cacheAudioFile(file: File): Promise<string | null> {
+  return addRecentFile(file);
+}
+
+/** @deprecated Use listRecentFiles + loadRecentFileById instead */
+export async function loadCachedAudioFile() {
+  const list = await listRecentFiles();
+  if (list.length === 0) return null;
+  return loadRecentFileById(list[0].id);
+}
+
+/** @deprecated Use clearAllRecentFiles instead */
+export async function clearCachedAudioFile(): Promise<void> {
+  return clearAllRecentFiles();
+}
+
+export type CachedFileRecord = RecentFileRecord;
