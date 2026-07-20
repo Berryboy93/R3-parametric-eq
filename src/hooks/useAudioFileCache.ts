@@ -144,9 +144,25 @@ export async function addRecentFile(file: File): Promise<string | null> {
         // Return quotaWarning on success so the caller can surface it;
         // null means "cached cleanly with no concerns".
         putReq.onsuccess = () => { db.close(); resolve(quotaWarning); };
-        putReq.onerror   = () => { db.close(); resolve(`Could not cache file: ${putReq.error?.message}`); };
+        putReq.onerror   = () => {
+          // putReq.onerror fires before tx.onabort; prevent the transaction
+          // from absorbing the error so tx.onabort still runs for cleanup.
+          putReq.transaction?.abort();
+        };
       };
       getAllReq.onerror = () => { db.close(); resolve(`Could not read cache: ${getAllReq.error?.message}`); };
+
+      tx.onabort = () => {
+        db.close();
+        // Distinguish quota-exceeded from other write failures so the UI can
+        // show a clear, actionable message instead of a raw DOMException string.
+        const err = tx.error;
+        if (err && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR')) {
+          resolve('Not enough storage space — the file was played but could not be saved to history');
+        } else {
+          resolve(`Could not cache file: ${err?.message ?? 'unknown error'}`);
+        }
+      };
     });
   } catch (err) {
     return `Cache unavailable: ${err instanceof Error ? err.message : String(err)}`;
