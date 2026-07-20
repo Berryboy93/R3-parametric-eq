@@ -15,6 +15,27 @@ const OLD_STORE  = 'audio-files';
 const MAX_BYTES   = 50 * 1024 * 1024; // 50 MB
 const MAX_ENTRIES = 5;
 
+// ── Persistent-storage request ─────────────────────────────────────────────────
+// We ask the browser once per page load to promote this origin to "persistent"
+// storage, which prevents IndexedDB data from being silently evicted under
+// storage pressure.  The flag ensures we fire at most one request regardless of
+// how many times addRecentFile is called.
+let _persistRequested = false;
+
+export async function requestPersistentStorage(): Promise<void> {
+  if (_persistRequested) return;
+  _persistRequested = true;
+  try {
+    if ('storage' in navigator && typeof navigator.storage.persist === 'function') {
+      await navigator.storage.persist();
+      // Result (true = granted, false = denied) is informational only; the
+      // existing quota-warning path already handles the denied/unsupported case.
+    }
+  } catch {
+    // persist() is not critical — silently ignore any error.
+  }
+}
+
 export type RecentFileRecord = {
   id: string;        // unique — timestamp + random suffix
   name: string;
@@ -72,6 +93,9 @@ export async function addRecentFile(file: File): Promise<string | null> {
   if (file.size > MAX_BYTES) {
     return `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB) — maximum is 50 MB`;
   }
+  // Ask the browser to protect this origin's storage from silent eviction.
+  // Fire-and-forget: we don't gate the write on the outcome.
+  requestPersistentStorage();
   // Check available quota — non-blocking: the write always proceeds.
   // If space is tight we surface a warning after a successful write so the
   // user knows the file may be evicted under memory pressure.

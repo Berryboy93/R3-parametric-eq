@@ -14,6 +14,7 @@ import {
   listRecentFiles,
   loadRecentFileById,
   removeRecentFile,
+  requestPersistentStorage,
 } from './useAudioFileCache';
 import type { RecentFileMeta } from './useAudioFileCache';
 
@@ -266,6 +267,10 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Ask the browser to protect this origin's storage as early as possible.
+      // The module-level flag in useAudioFileCache ensures it fires at most once.
+      requestPersistentStorage();
+
       // Load the list first so the popover is populated even if decode fails
       const list = await listRecentFiles();
       if (cancelled) return;
