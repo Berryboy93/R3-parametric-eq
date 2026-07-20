@@ -35,7 +35,7 @@ export interface EQPluginPanelProps {
   onBandUpdate: (id: number, u: Partial<EQBand>) => void;
   spectrumData: Float32Array | null;
   isPlaying: boolean;
-  onPlay: () => Promise<void>;
+  onPlay: () => Promise<boolean>;
   onStop: () => void;
   sourceMode: AudioSourceMode;
   onSourceMode: (m: AudioSourceMode) => void;

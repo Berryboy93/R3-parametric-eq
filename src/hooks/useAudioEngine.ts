@@ -16,6 +16,33 @@ import {
 
 export type AudioSourceMode = 'pink-noise' | 'microphone' | 'file';
 
+// ── Mic acquisition with timeout ─────────────────────────────────────────────
+// getUserMedia has no built-in cancellation. We race it against a timer and,
+// if the timeout wins, stop any stream that arrives late to release hardware.
+const MIC_TIMEOUT_MS = 15_000;
+
+async function getUserMediaWithTimeout(): Promise<MediaStream> {
+  let lateStream: MediaStream | null = null;
+
+  const micPromise = navigator.mediaDevices
+    .getUserMedia({ audio: true, video: false })
+    .then(s => { lateStream = s; return s; });
+
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), MIC_TIMEOUT_MS)
+  );
+
+  try {
+    return await Promise.race([micPromise, timeoutPromise]);
+  } catch (err) {
+    // If timeout fired and the mic resolves later, release the hardware.
+    if (err instanceof Error && err.message === 'timeout') {
+      micPromise.then(s => s.getTracks().forEach(t => t.stop())).catch(() => {});
+    }
+    throw err;
+  }
+}
+
 function webAudioType(t: FilterType): BiquadFilterType {
   switch (t) {
     case FilterType.HighPass:  return 'highpass';
@@ -198,7 +225,10 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   // ── Play ─────────────────────────────────────────────────────────────────────
   // `overrideMode` lets callers (e.g. source-switch) pass a mode before the
   // React state/ref has had a chance to update, avoiding stale-closure silence.
-  const play = useCallback(async (overrideMode?: AudioSourceMode) => {
+  // Returns `true` on success, `false` when the source could not start (e.g.
+  // mic permission denied). Callers that auto-restart (switchSource) use this
+  // to revert state instead of leaving the UI frozen.
+  const play = useCallback(async (overrideMode?: AudioSourceMode): Promise<boolean> => {
     setSourceError(null);
     const ctx = await ensureCtx();
     const mode = overrideMode ?? sourceModeRef.current;
@@ -232,7 +262,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     if (mode === 'microphone') {
       // ── Microphone ──────────────────────────────────────────────────────────
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        const stream = await getUserMediaWithTimeout();
         streamRef.current = stream;
         const src = ctx.createMediaStreamSource(stream);
         streamSrcRef.current = src;
@@ -240,10 +270,12 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
         // Mic does not need .start() — it's live immediately
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : '';
+        const isDenied  = msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('permission');
+        const isTimeout = msg === 'timeout';
         setSourceError(
-          msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('permission')
-            ? 'Microphone access denied — allow mic access in your browser then try again'
-            : `Microphone error: ${msg || 'unknown error'}`
+          isDenied  ? 'Microphone access denied — allow mic access in your browser then try again'
+          : isTimeout ? `Microphone permission timed out after ${MIC_TIMEOUT_MS / 1000} s — grant access when prompted and try again`
+          : `Microphone error: ${msg || 'unknown error'}`
         );
         // Tear down partially-built chain
         filtersRef.current.forEach(f => f.disconnect());
@@ -251,7 +283,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
         gainNode.disconnect();
         filtersRef.current = [];
         analyserRef.current = null;
-        return;
+        return false;
       }
     } else if (mode === 'file') {
       // ── Audio file ──────────────────────────────────────────────────────────
@@ -262,7 +294,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
         gainNode.disconnect();
         filtersRef.current = [];
         analyserRef.current = null;
-        return;
+        return false;
       }
       const src = ctx.createBufferSource();
       src.buffer = fileBufferRef.current;
@@ -287,6 +319,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     playingRef.current = true;
     setIsPlaying(true);
     startRaf();
+    return true;
   }, [bands, bypass, syncFilters, startRaf, ensureCtx]);
 
   // ── Seek (file mode only) ─────────────────────────────────────────────────────
@@ -348,6 +381,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   // audio was already playing — so the user never hears silence.
   const switchSource = useCallback(async (mode: AudioSourceMode) => {
     const wasPlaying = playingRef.current;
+    const prevMode = sourceModeRef.current;   // remember before stop() clears state
     stop();
     setSourceMode(mode);
     // Update the ref immediately so play() sees the new mode even before the
@@ -357,7 +391,14 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     if (wasPlaying) {
       // File mode: only restart if a buffer is already loaded
       if (mode === 'file' && !fileBufferRef.current) return;
-      await play(mode);
+      const ok = await play(mode);
+      if (!ok) {
+        // play() failed (e.g. mic permission denied/timed-out) — revert the
+        // source mode so the UI doesn't show the new source as selected while
+        // nothing is actually playing.
+        setSourceMode(prevMode);
+        sourceModeRef.current = prevMode;
+      }
     }
   }, [stop, play]);
 
