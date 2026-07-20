@@ -379,6 +379,11 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
           : isTimeout ? `Microphone permission timed out after ${MIC_TIMEOUT_MS / 1000} s — grant access when prompted and try again`
           : `Microphone error: ${msg || 'unknown error'}`
         );
+        // Revert to pink-noise so the source selector isn't left stuck on MIC
+        // when nothing is actually playing. switchSource overrides this with
+        // prevMode if it is the caller, so the revert is always correct.
+        setSourceMode('pink-noise');
+        sourceModeRef.current = 'pink-noise';
         // Tear down partially-built chain
         filtersRef.current.forEach(f => f.disconnect());
         analyser.disconnect();
