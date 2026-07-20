@@ -38,7 +38,7 @@ export function App() {
 
   const {
     isPlaying, play, stop, spectrumData,
-    sourceMode, setSourceMode, sourceError, setSourceError,
+    sourceMode, setSourceMode, switchSource, sourceError, setSourceError,
     loadFile, fileReady, fileName,
     fileDuration, fileCurrentTime, seek,
     cacheError, setCacheError,
@@ -65,11 +65,10 @@ export function App() {
     updateBand(bandId, update);
   }, [updateBand]);
 
-  const handleSourceMode = (mode: AudioSourceMode) => {
-    if (isPlaying) stop();
-    setSourceMode(mode);
-    setSourceError(null);
-  };
+  // switchSource handles stop + mode update + optional auto-restart atomically
+  const handleSourceMode = useCallback((mode: AudioSourceMode) => {
+    switchSource(mode);
+  }, [switchSource]);
 
   const handleClearCachedFile = useCallback(async () => {
     if (isPlaying) stop();
@@ -234,6 +233,7 @@ export function App() {
           onStop={stop}
           sourceMode={sourceMode}
           onSourceMode={handleSourceMode}
+          onSwitchSource={switchSource}
           sourceError={sourceError}
           onClearError={() => setSourceError(null)}
           loadFile={loadFile}

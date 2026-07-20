@@ -196,10 +196,12 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   }, []);
 
   // ── Play ─────────────────────────────────────────────────────────────────────
-  const play = useCallback(async () => {
+  // `overrideMode` lets callers (e.g. source-switch) pass a mode before the
+  // React state/ref has had a chance to update, avoiding stale-closure silence.
+  const play = useCallback(async (overrideMode?: AudioSourceMode) => {
     setSourceError(null);
     const ctx = await ensureCtx();
-    const mode = sourceModeRef.current;
+    const mode = overrideMode ?? sourceModeRef.current;
 
     // Build filter chain
     filtersRef.current = bands.map(() => ctx.createBiquadFilter());
@@ -338,9 +340,27 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   // Cleanup on unmount
   useEffect(() => () => { stop(); ctxRef.current?.close(); }, [stop]);
 
+  // ── Switch source (optionally keep playback running) ─────────────────────────
+  // Stops the current source, sets the new mode, and restarts immediately if
+  // audio was already playing — so the user never hears silence.
+  const switchSource = useCallback(async (mode: AudioSourceMode) => {
+    const wasPlaying = playingRef.current;
+    stop();
+    setSourceMode(mode);
+    // Update the ref immediately so play() sees the new mode even before the
+    // React state flush updates it via the useEffect above.
+    sourceModeRef.current = mode;
+    setSourceError(null);
+    if (wasPlaying) {
+      // File mode: only restart if a buffer is already loaded
+      if (mode === 'file' && !fileBufferRef.current) return;
+      await play(mode);
+    }
+  }, [stop, play]);
+
   return {
     isPlaying, play, stop, spectrumData,
-    sourceMode, setSourceMode,
+    sourceMode, setSourceMode, switchSource,
     sourceError, setSourceError,
     loadFile, fileReady, fileName,
     fileDuration, fileCurrentTime, seek,

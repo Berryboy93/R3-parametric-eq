@@ -39,6 +39,7 @@ export interface EQPluginPanelProps {
   onStop: () => void;
   sourceMode: AudioSourceMode;
   onSourceMode: (m: AudioSourceMode) => void;
+  onSwitchSource: (m: AudioSourceMode) => Promise<void>;
   sourceError: string | null;
   onClearError: () => void;
   loadFile: (f: File) => Promise<void>;
@@ -91,7 +92,7 @@ const r3Btn = (active: boolean, color = '#B7FF00'): React.CSSProperties => ({
 export function EQPluginPanel(props: EQPluginPanelProps) {
   const {
     state, curve, selectedBand, onSelectBand, onBandDrag, onBandUpdate, spectrumData,
-    isPlaying, onPlay, onStop, sourceMode, onSourceMode, sourceError, onClearError,
+    isPlaying, onPlay, onStop, sourceMode, onSourceMode, onSwitchSource, sourceError, onClearError,
     loadFile, fileReady, fileName, fileFromCache, onClearCachedFile, cacheError, onClearCacheError,
     bypass, onToggleBypass, canUndo, canRedo, onUndo, onRedo, onReset, onOpenPresets, onShowHelp,
     activeSlot, onCaptureSlot, onToggleAB, onAIApply,
@@ -115,9 +116,9 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
     const file = e.dataTransfer.files[0];
     if (!file) return;
     if (!file.type.startsWith('audio/') && !/\.(mp3|wav|flac|ogg|aac|m4a|opus)$/i.test(file.name)) return;
-    onSourceMode('file');
+    onSwitchSource('file');
     loadFile(file);
-  }, [onSourceMode, loadFile]);
+  }, [onSwitchSource, loadFile]);
 
   return (
     <div
@@ -191,10 +192,16 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
               <button
                 key={mode}
                 onClick={() => {
-                  if (isPlaying) onStop();
-                  onSourceMode(mode);
                   onClearError();
-                  if (mode === 'file') fileInputRef.current?.click();
+                  if (mode === 'file') {
+                    // File mode: stop + switch, then open picker (loadFile restarts if needed)
+                    if (isPlaying) onStop();
+                    onSourceMode(mode);
+                    fileInputRef.current?.click();
+                  } else {
+                    // Pink-noise / mic: switch atomically, restarting if playing
+                    onSwitchSource(mode);
+                  }
                 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 3,
