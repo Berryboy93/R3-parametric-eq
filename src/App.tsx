@@ -41,6 +41,8 @@ export function App() {
     sourceMode, setSourceMode, sourceError, setSourceError,
     loadFile, fileReady, fileName,
     fileDuration, fileCurrentTime, seek,
+    cacheError, setCacheError,
+    clearCachedFile, fileFromCache,
   } = useAudioEngine(state.bands, state.bypass);
 
   useKeyboardShortcuts({
@@ -68,6 +70,12 @@ export function App() {
     setSourceMode(mode);
     setSourceError(null);
   };
+
+  const handleClearCachedFile = useCallback(async () => {
+    if (isPlaying) stop();
+    await clearCachedFile();
+    setSourceMode('pink-noise');
+  }, [isPlaying, stop, clearCachedFile, setSourceMode]);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', overflowY: 'auto' }}>
@@ -231,6 +239,10 @@ export function App() {
           loadFile={loadFile}
           fileReady={fileReady}
           fileName={fileName}
+          fileFromCache={fileFromCache}
+          onClearCachedFile={handleClearCachedFile}
+          cacheError={cacheError}
+          onClearCacheError={() => setCacheError(null)}
           bypass={state.bypass}
           onToggleBypass={toggleBypass}
           canUndo={canUndo}

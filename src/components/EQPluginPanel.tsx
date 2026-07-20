@@ -44,6 +44,10 @@ export interface EQPluginPanelProps {
   loadFile: (f: File) => Promise<void>;
   fileReady: boolean;
   fileName: string | null;
+  fileFromCache: boolean;
+  onClearCachedFile: () => Promise<void>;
+  cacheError: string | null;
+  onClearCacheError: () => void;
   bypass: boolean;
   onToggleBypass: () => void;
   canUndo: boolean;
@@ -88,7 +92,7 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
   const {
     state, curve, selectedBand, onSelectBand, onBandDrag, onBandUpdate, spectrumData,
     isPlaying, onPlay, onStop, sourceMode, onSourceMode, sourceError, onClearError,
-    loadFile, fileReady, fileName,
+    loadFile, fileReady, fileName, fileFromCache, onClearCachedFile, cacheError, onClearCacheError,
     bypass, onToggleBypass, canUndo, canRedo, onUndo, onRedo, onReset, onOpenPresets, onShowHelp,
     activeSlot, onCaptureSlot, onToggleAB, onAIApply,
     fileDuration, fileCurrentTime, onSeek,
@@ -205,19 +209,32 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
             );
           })}
           {sourceMode === 'file' && fileReady && fileName && (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              title={`Loaded: ${fileName} — click to change`}
-              style={{
-                padding: '4px 8px', borderRadius: 4,
-                fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
-                maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                ...r3Btn(false),
-                color: '#909090',
-              }}
-            >
-              {fileName.length > 13 ? `${fileName.slice(0, 11)}…` : fileName}
-            </button>
+            <>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                title={`Loaded: ${fileName} — click to change${fileFromCache ? ' (restored from cache)' : ''}`}
+                style={{
+                  padding: '4px 8px', borderRadius: 4,
+                  fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
+                  maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  ...r3Btn(false),
+                  color: fileFromCache ? '#7ab8ff' : '#909090',
+                  borderColor: fileFromCache ? '#3a6a9a' : undefined,
+                }}
+              >
+                {fileFromCache ? '💾 ' : ''}{fileName.length > 13 ? `${fileName.slice(0, 11)}…` : fileName}
+              </button>
+              <button
+                onClick={onClearCachedFile}
+                title="Clear cached file"
+                style={{
+                  padding: '4px 7px', borderRadius: 4,
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
+                  ...r3Btn(false),
+                  color: '#604040',
+                }}
+              >✕</button>
+            </>
           )}
         </div>
 
@@ -350,6 +367,20 @@ export function EQPluginPanel(props: EQPluginPanelProps) {
           <span style={{ fontSize: 11, color: '#ef8888', flex: 1 }}>{sourceError}</span>
           <button onClick={onClearError}
             style={{ background: 'none', border: 'none', color: '#705050', cursor: 'pointer', fontSize: 14 }}>✕</button>
+        </div>
+      )}
+
+      {/* ── Cache error banner ───────────────────────────────────────── */}
+      {cacheError && (
+        <div style={{
+          padding: '7px 14px', background: 'rgba(239,180,68,0.07)',
+          borderBottom: '1px solid rgba(239,180,68,0.18)',
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ fontSize: 12 }}>💾</span>
+          <span style={{ fontSize: 11, color: '#e8b84b', flex: 1 }}>{cacheError} — file won't be restored on reload</span>
+          <button onClick={onClearCacheError}
+            style={{ background: 'none', border: 'none', color: '#705030', cursor: 'pointer', fontSize: 14 }}>✕</button>
         </div>
       )}
 

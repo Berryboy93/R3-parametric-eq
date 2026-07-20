@@ -8,6 +8,11 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { EQBand, FilterType } from '../dsp';
+import {
+  cacheAudioFile,
+  clearCachedAudioFile,
+  loadCachedAudioFile,
+} from './useAudioFileCache';
 
 export type AudioSourceMode = 'pink-noise' | 'microphone' | 'file';
 
@@ -54,6 +59,8 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   const [fileName,       setFileName]       = useState<string | null>(null);
   const [fileDuration,   setFileDuration]   = useState(0);
   const [fileCurrentTime, setFileCurrentTime] = useState(0);
+  const [cacheError,     setCacheError]     = useState<string | null>(null);
+  const [fileFromCache,  setFileFromCache]  = useState(false);
 
   // Audio node refs
   const ctxRef         = useRef<AudioContext | null>(null);
@@ -124,21 +131,69 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
   // ── Load an audio file ───────────────────────────────────────────────────────
   const loadFile = useCallback(async (file: File) => {
     setSourceError(null);
+    setCacheError(null);
     try {
       const ctx = await ensureCtx();
       const arrayBuf   = await file.arrayBuffer();
-      const audioBuf   = await ctx.decodeAudioData(arrayBuf);
+      const audioBuf   = await ctx.decodeAudioData(arrayBuf.slice(0));
       fileBufferRef.current = audioBuf;
       setFileDuration(audioBuf.duration);
       setFileCurrentTime(0);
       offsetRef.current = 0;
       setFileReady(true);
       setFileName(file.name);
+      setFileFromCache(false);
+      // Persist to IndexedDB (non-blocking; report error separately)
+      cacheAudioFile(file).then(err => {
+        if (err) setCacheError(err);
+      });
     } catch {
       setSourceError(`Could not decode "${file.name}" — try MP3, WAV, OGG, or FLAC`);
       setFileReady(false);
     }
   }, [ensureCtx]);
+
+  // ── Clear cached file ────────────────────────────────────────────────────────
+  const clearCachedFile = useCallback(async () => {
+    await clearCachedAudioFile();
+    fileBufferRef.current = null;
+    setFileReady(false);
+    setFileName(null);
+    setFileDuration(0);
+    setFileCurrentTime(0);
+    offsetRef.current = 0;
+    setFileFromCache(false);
+    setCacheError(null);
+  }, []);
+
+  // ── Restore file from IndexedDB on mount ─────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const record = await loadCachedAudioFile();
+      if (!record || cancelled) return;
+      try {
+        // Build a temporary AudioContext just for decoding (avoids requiring
+        // user gesture before the main context is created).
+        const tmpCtx = new AudioContext();
+        const audioBuf = await tmpCtx.decodeAudioData(record.data.slice(0));
+        tmpCtx.close();
+        if (cancelled) return;
+        fileBufferRef.current = audioBuf;
+        setFileDuration(audioBuf.duration);
+        setFileCurrentTime(0);
+        setFileReady(true);
+        setFileName(record.name);
+        setFileFromCache(true);
+        setSourceMode('file');
+      } catch {
+        // Corrupted cache — silently clear it
+        clearCachedAudioFile();
+      }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Play ─────────────────────────────────────────────────────────────────────
   const play = useCallback(async () => {
@@ -289,5 +344,7 @@ export function useAudioEngine(bands: readonly EQBand[], bypass: boolean) {
     sourceError, setSourceError,
     loadFile, fileReady, fileName,
     fileDuration, fileCurrentTime, seek,
+    cacheError, setCacheError,
+    clearCachedFile, fileFromCache,
   };
 }
