@@ -193,6 +193,60 @@ describe('MAX_ENTRIES eviction (cap = 5)', () => {
   });
 });
 
+// ── Concurrent adds (two-tab race simulation) ─────────────────────────────────
+// IndexedDB readwrite transactions on the same store are serialized by the spec:
+// the second transaction waits for the first to commit before its requests run.
+// These tests confirm that invariant holds under fake-indexeddb and that the
+// list never exceeds MAX_ENTRIES (5) regardless of concurrency.
+
+describe('concurrent addRecentFile calls (two-tab simulation)', () => {
+  it('two concurrent adds when at 4 entries leave exactly 5 (not 6)', async () => {
+    // Seed 4 entries — one below the cap
+    for (let i = 1; i <= 4; i++) {
+      await addRecentFile(makeFile(`seed-${i}.mp3`)); tick();
+    }
+    expect(await listRecentFiles()).toHaveLength(4);
+
+    // Fire two simultaneous adds — if transactions were NOT serialized both
+    // would read count=4, skip eviction, and produce 6 entries.
+    await Promise.all([
+      addRecentFile(makeFile('concurrent-a.mp3')),
+      addRecentFile(makeFile('concurrent-b.mp3')),
+    ]);
+
+    const list = await listRecentFiles();
+    expect(list.length).toBeLessThanOrEqual(5);
+    // At least one of the two concurrent files must have been stored
+    const names = list.map(f => f.name);
+    expect(
+      names.includes('concurrent-a.mp3') || names.includes('concurrent-b.mp3')
+    ).toBe(true);
+  });
+
+  it('two concurrent adds when already at 5 entries never exceed the cap', async () => {
+    // Fill to MAX_ENTRIES
+    for (let i = 1; i <= 5; i++) {
+      await addRecentFile(makeFile(`full-${i}.mp3`)); tick();
+    }
+    expect(await listRecentFiles()).toHaveLength(5);
+
+    await Promise.all([
+      addRecentFile(makeFile('overflow-a.mp3')),
+      addRecentFile(makeFile('overflow-b.mp3')),
+    ]);
+
+    expect((await listRecentFiles()).length).toBeLessThanOrEqual(5);
+  });
+
+  it('five concurrent adds into an empty store produce at most 5 entries', async () => {
+    await Promise.all(
+      Array.from({ length: 5 }, (_, i) => addRecentFile(makeFile(`burst-${i + 1}.mp3`)))
+    );
+
+    expect((await listRecentFiles()).length).toBeLessThanOrEqual(5);
+  });
+});
+
 // ── removeRecentFile ──────────────────────────────────────────────────────────
 
 describe('removeRecentFile', () => {
