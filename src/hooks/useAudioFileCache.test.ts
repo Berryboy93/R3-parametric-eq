@@ -34,6 +34,8 @@ import {
   removeRecentFile,
   loadRecentFileById,
   clearAllRecentFiles,
+  requestPersistentStorage,
+  _resetPersistFlagForTesting,
 } from './useAudioFileCache';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -250,6 +252,66 @@ describe('clearAllRecentFiles', () => {
 
     const list = await listRecentFiles();
     expect(list).toHaveLength(0);
+  });
+});
+
+// ── requestPersistentStorage — once-only flag + denial resilience ─────────────
+
+describe('requestPersistentStorage', () => {
+  // jsdom does not implement navigator.storage, so we install a minimal stub
+  // via Object.defineProperty before each test and remove it after.
+  let mockPersist:   ReturnType<typeof vi.fn>;
+  let mockEstimate:  ReturnType<typeof vi.fn>;
+
+  function installStorageStub(persistImpl: () => Promise<boolean>) {
+    mockPersist  = vi.fn(persistImpl);
+    mockEstimate = vi.fn().mockResolvedValue({ quota: 10_000_000, usage: 0 });
+    Object.defineProperty(navigator, 'storage', {
+      value:        { persist: mockPersist, estimate: mockEstimate },
+      configurable: true,
+      writable:     true,
+    });
+  }
+
+  beforeEach(() => {
+    // Each test needs a clean once-only flag.
+    _resetPersistFlagForTesting();
+  });
+
+  afterEach(() => {
+    // Remove the stub so other suites see the original (undefined) value.
+    Object.defineProperty(navigator, 'storage', {
+      value: undefined, configurable: true, writable: true,
+    });
+  });
+
+  it('calls persist() only once even when addRecentFile is invoked twice', async () => {
+    installStorageStub(() => Promise.resolve(true));
+
+    await addRecentFile(makeFile('a.mp3')); tick();
+    await addRecentFile(makeFile('b.mp3'));
+
+    // requestPersistentStorage is fire-and-forget inside addRecentFile;
+    // flush the microtask queue so the async call completes before asserting.
+    await Promise.resolve();
+    expect(mockPersist).toHaveBeenCalledTimes(1);
+  });
+
+  it('a denied persist() (returns false) does not suppress the quota warning', async () => {
+    installStorageStub(() => Promise.resolve(false));
+    // Simulate tight quota: 49 bytes free, file is 100 bytes (threshold = file.size * 2 = 200)
+    mockEstimate.mockResolvedValue({ quota: 1_000, usage: 951 });
+
+    const file   = makeFile('audio.mp3', 100);
+    const result = await addRecentFile(file);
+
+    expect(result).toMatch(/storage low/i);
+  });
+
+  it('completes without throwing when persist() raises an error (e.g. unsupported browser)', async () => {
+    installStorageStub(() => Promise.reject(new DOMException('persist() not supported', 'NotSupportedError')));
+
+    await expect(requestPersistentStorage()).resolves.toBeUndefined();
   });
 });
 

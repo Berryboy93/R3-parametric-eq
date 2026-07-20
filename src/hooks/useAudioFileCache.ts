@@ -22,6 +22,14 @@ const MAX_ENTRIES = 5;
 // how many times addRecentFile is called.
 let _persistRequested = false;
 
+/**
+ * Test-only escape hatch — resets the once-only flag so each test starts fresh.
+ * Never call this in production code.
+ */
+export function _resetPersistFlagForTesting(): void {
+  _persistRequested = false;
+}
+
 export async function requestPersistentStorage(): Promise<void> {
   if (_persistRequested) return;
   _persistRequested = true;
