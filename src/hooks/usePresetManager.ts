@@ -90,6 +90,17 @@ export function usePresetManager() {
     [manager]
   );
 
+  const retryLoad = useCallback(async () => {
+    setLoadError(null);
+    try {
+      await manager.init();
+      setUserPresets(manager.getUserPresets());
+      setLoadError(null);
+    } catch {
+      setLoadError('Still could not load presets — check your connection and try again.');
+    }
+  }, [manager]);
+
   const dismissLoadError = useCallback(() => setLoadError(null), []);
   const dismissSaveError = useCallback(() => setSaveError(null), []);
 
@@ -107,6 +118,7 @@ export function usePresetManager() {
     manager,
     loadError,
     saveError,
+    retryLoad,
     dismissLoadError,
     dismissSaveError,
   };

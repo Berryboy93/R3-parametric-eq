@@ -22,6 +22,7 @@ interface Props {
   saveError?: string | null;
   onDismissLoadError?: () => void;
   onDismissSaveError?: () => void;
+  onRetryLoad?: () => void;
 }
 
 const CATEGORY_ORDER = ['All', 'Reference', 'Vocal', 'Voice', 'Music', 'Mastering', 'Instrument', 'Custom'];
@@ -29,7 +30,7 @@ const CATEGORY_ORDER = ['All', 'Reference', 'Vocal', 'Voice', 'Music', 'Masterin
 export function PresetBrowser({
   factoryPresets, userPresets, currentState,
   onLoad, onSave, onDelete, onExport, onImport, onClose,
-  loadError, saveError, onDismissLoadError, onDismissSaveError,
+  loadError, saveError, onDismissLoadError, onDismissSaveError, onRetryLoad,
 }: Props) {
   const [search,       setSearch]       = useState('');
   const [category,     setCategory]     = useState('All');
@@ -115,6 +116,18 @@ export function PresetBrowser({
             display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
           }}>
             <span style={{ fontSize: 11, color: '#ef4444', flex: 1 }}>⚠ {loadError}</span>
+            {onRetryLoad && (
+              <button
+                onClick={onRetryLoad}
+                title="Retry loading presets"
+                style={{
+                  background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.40)',
+                  color: '#ef4444', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                  cursor: 'pointer', padding: '3px 9px', borderRadius: 4,
+                  fontFamily: 'Montserrat, sans-serif',
+                }}
+              >RETRY</button>
+            )}
             <button
               onClick={onDismissLoadError}
               title="Dismiss"

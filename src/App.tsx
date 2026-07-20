@@ -225,6 +225,7 @@ export function App() {
             saveError={presets.saveError}
             onDismissLoadError={presets.dismissLoadError}
             onDismissSaveError={presets.dismissSaveError}
+            onRetryLoad={presets.retryLoad}
           />
         )}
 
