@@ -5,8 +5,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "server": "npx tsx server/index.ts",
+    "dev": "concurrently \"vite\" \"npx tsx server/index.ts\"",
+    "dev:client": "vite",
+    "dev:server": "npx tsx server/index.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run"
@@ -30,6 +31,7 @@
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@vitejs/plugin-react": "^4.7.0",
+    "concurrently": "^10.0.4",
     "fake-indexeddb": "^6.2.5",
     "typescript": "^5.3.3",
     "vite": "^5.4.21"

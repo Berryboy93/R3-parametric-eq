@@ -1,0 +1,37 @@
+{
+  "name": "r3-parametric-eq-demo",
+  "version": "1.0.0",
+  "description": "R3 NATIVE Parametric EQ Engine — Interactive Demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "npx tsx server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.20.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsdom": "^29.1.1",
+    "pg": "^8.22.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.23.1",
+    "vitest": "^4.1.10"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.7.0",
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^5.3.3",
+    "vite": "^5.4.21"
+  }
+}
